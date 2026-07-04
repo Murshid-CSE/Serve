@@ -1,0 +1,69 @@
+name: community_care_hub
+description: "Community Care Hub — One Platform. One Community. One Coordinated Workflow."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Firebase
+  firebase_core: ^4.11.0
+  firebase_auth: ^6.5.4
+  cloud_firestore: ^6.6.0
+  firebase_storage: ^13.4.3
+  firebase_messaging: ^16.4.1
+
+  # Authentication
+  google_sign_in: ^6.2.1
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Navigation
+  go_router: ^17.3.0
+
+  # Maps & Location
+  flutter_map: ^8.3.0
+  latlong2: ^0.9.1
+  geolocator: ^14.0.3
+  geocoding: ^4.0.0
+
+  # Image Handling
+  image_picker: ^1.1.2
+  flutter_image_compress: ^2.3.0
+  cached_network_image: ^3.4.1
+
+  # UI/UX
+  google_fonts: ^8.1.0
+  shimmer: ^3.0.0
+  flutter_animate: ^4.5.2
+  percent_indicator: ^4.2.3
+  fl_chart: ^1.2.0
+
+  # Utilities
+  connectivity_plus: ^7.2.0
+  permission_handler: ^12.0.3
+  intl: ^0.20.2
+  uuid: ^4.5.1
+  shared_preferences: ^2.5.3
+  url_launcher: ^6.3.1
+  timeago: ^3.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  integration_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/

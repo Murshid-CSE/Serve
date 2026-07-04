@@ -1,0 +1,108 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+  
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function validUser() {
+      return request.resource.data.keys().hasAll(['uid', 'name', 'email', 'role']) &&
+             request.resource.data.name is string &&
+             request.resource.data.name.size() > 0 &&
+             request.resource.data.name.size() <= 100;
+    }
+    
+    // Users
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId) && validUser();
+      allow update: if isOwner(userId) && 
+        !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['impactScore', 'reliabilityScore', 'role']);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+      
+      // User notifications subcollection
+      match /notifications/{notificationId} {
+        allow read: if isOwner(userId);
+        allow create: if isSignedIn();
+        allow update: if isOwner(userId);
+        allow delete: if isOwner(userId) || isAdmin();
+      }
+    }
+    
+    // Food Donations
+    match /food_donations/{donationId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && 
+        request.resource.data.donorId == request.auth.uid &&
+        request.resource.data.status == 'available';
+      allow update: if isSignedIn() && (
+        resource.data.donorId == request.auth.uid ||
+        (resource.data.status == 'available' && 
+         request.resource.data.acceptedBy == request.auth.uid) ||
+        resource.data.acceptedBy == request.auth.uid ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+    
+    // Blood Requests
+    match /blood_requests/{requestId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && 
+        request.resource.data.requesterId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.requesterId == request.auth.uid ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+    
+    // Volunteer Tasks
+    match /volunteer_tasks/{taskId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        resource.data.assignedTo == request.auth.uid ||
+        resource.data.assignedTo == null ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+    
+    // Emergency Requests
+    match /emergency_requests/{emergencyId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && 
+        request.resource.data.requesterId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.requesterId == request.auth.uid ||
+        request.auth.uid in resource.data.responders ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+    
+    // Notifications
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && 
+        resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && 
+        resource.data.userId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+  }
+}

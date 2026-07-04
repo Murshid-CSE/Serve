@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "304339338811",
+    "project_id": "community-care-hub",
+    "storage_bucket": "community-care-hub.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:304339338811:android:7c62cfc73d963bed2fbe1e",
+        "android_client_info": {
+          "package_name": "com.communitycarecarehub.community_care_hub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJBSdlHmOJj2b1iNDqaE7moPpQDNLcrDs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

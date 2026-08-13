@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:community_care_hub/features/auth/presentation/providers/auth_provider.dart';
 import 'package:community_care_hub/features/auth/domain/entities/user_entity.dart';
 import 'package:community_care_hub/core/widgets/loading_shimmer.dart';
@@ -102,7 +103,7 @@ class LeaderboardScreen extends ConsumerWidget {
                                 CircleAvatar(
                                   radius: 20,
                                   backgroundColor: AppColors.primarySurface,
-                                  backgroundImage: user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
+                                  backgroundImage: user.photoUrl != null ? CachedNetworkImageProvider(user.photoUrl!) : null,
                                   child: user.photoUrl == null
                                       ? Text(
                                           user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
@@ -225,7 +226,7 @@ class LeaderboardScreen extends ConsumerWidget {
                 child: CircleAvatar(
                   radius: rank == 1 ? 29 : 23,
                   backgroundColor: Colors.white,
-                  backgroundImage: user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
+                  backgroundImage: user.photoUrl != null ? CachedNetworkImageProvider(user.photoUrl!) : null,
                   child: user.photoUrl == null
                       ? Text(
                           user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',

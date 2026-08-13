@@ -2,9 +2,9 @@ import 'package:community_care_hub/features/blood/domain/entities/blood_request_
 import 'package:community_care_hub/features/blood/domain/repositories/blood_repository.dart';
 
 class CreateBloodRequest {
-  final BloodRepository _repository;
 
   const CreateBloodRequest(this._repository);
+  final BloodRepository _repository;
 
   Future<BloodRequestEntity> call({
     required String patientName,

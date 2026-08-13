@@ -216,11 +216,11 @@ class _ShimmerDetail extends StatelessWidget {
           _ShimmerBox(width: screenWidth * 0.6, height: 12),
           const SizedBox(height: 20),
           // Action row
-          Row(
+          const Row(
             children: [
-              const _ShimmerBox(width: 100, height: 40, borderRadius: 12),
-              const SizedBox(width: 12),
-              const _ShimmerBox(width: 100, height: 40, borderRadius: 12),
+              _ShimmerBox(width: 100, height: 40, borderRadius: 12),
+              SizedBox(width: 12),
+              _ShimmerBox(width: 100, height: 40, borderRadius: 12),
             ],
           ),
         ],

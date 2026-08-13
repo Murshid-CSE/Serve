@@ -2,11 +2,11 @@ import 'package:community_care_hub/features/emergency/domain/entities/emergency_
 import 'package:community_care_hub/features/emergency/domain/repositories/emergency_repository.dart';
 
 class GetNearbyEmergencies {
-  final EmergencyRepository repository;
 
   const GetNearbyEmergencies(this.repository);
+  final EmergencyRepository repository;
 
-  Future<List<EmergencyAlertEntity>> call({
+  Stream<List<EmergencyAlertEntity>> call({
     required double latitude,
     required double longitude,
     required double radiusKm,

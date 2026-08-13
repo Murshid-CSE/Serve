@@ -6,9 +6,6 @@ import 'package:community_care_hub/core/constants/app_colors.dart';
 import 'package:community_care_hub/core/extensions/datetime_extension.dart';
 
 class TaskCard extends StatelessWidget {
-  final VolunteerTaskEntity task;
-  final VoidCallback onTap;
-  final double? distanceKm;
 
   const TaskCard({
     super.key,
@@ -16,6 +13,9 @@ class TaskCard extends StatelessWidget {
     required this.onTap,
     this.distanceKm,
   });
+  final VolunteerTaskEntity task;
+  final VoidCallback onTap;
+  final double? distanceKm;
 
   IconData _getIconForType(String type) {
     return switch (type) {

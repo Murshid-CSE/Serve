@@ -13,7 +13,7 @@ abstract class FoodRepository {
     required String? imagePath,
   });
 
-  Future<List<FoodDonationEntity>> getNearbyFoodDonations({
+  Stream<List<FoodDonationEntity>> getNearbyFoodDonations({
     required double latitude,
     required double longitude,
     required double radiusKm,
@@ -30,7 +30,7 @@ abstract class FoodRepository {
     required String status,
   });
 
-  Future<List<FoodDonationEntity>> getUserDonations(String userId);
+  Stream<List<FoodDonationEntity>> getUserDonations(String userId);
 
-  Future<List<FoodDonationEntity>> getAcceptedTasks(String userId);
+  Stream<List<FoodDonationEntity>> getAcceptedTasks(String userId);
 }

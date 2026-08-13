@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -68,6 +69,15 @@ void main() async {
     persistenceEnabled: true,
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
+
+  if (const bool.fromEnvironment('USE_EMULATOR')) {
+    try {
+      FirebaseFirestore.instance.useFirestoreEmulator('127.0.0.1', 8080);
+      await FirebaseAuth.instance.useAuthEmulator('127.0.0.1', 9099);
+    } catch (e) {
+      debugPrint('Emulator connection failed: $e');
+    }
+  }
 
   // Setup FCM background handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);

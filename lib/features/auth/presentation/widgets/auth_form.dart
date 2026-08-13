@@ -2,14 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:community_care_hub/core/widgets/app_text_field.dart';
 
 class AuthFormField extends StatefulWidget {
-  final TextEditingController controller;
-  final String label;
-  final String? hint;
-  final IconData? prefixIcon;
-  final String? Function(String?)? validator;
-  final TextInputType? keyboardType;
-  final bool isPassword;
-  final TextInputAction? textInputAction;
 
   const AuthFormField({
     super.key,
@@ -22,6 +14,14 @@ class AuthFormField extends StatefulWidget {
     this.isPassword = false,
     this.textInputAction,
   });
+  final TextEditingController controller;
+  final String label;
+  final String? hint;
+  final IconData? prefixIcon;
+  final String? Function(String?)? validator;
+  final TextInputType? keyboardType;
+  final bool isPassword;
+  final TextInputAction? textInputAction;
 
   @override
   State<AuthFormField> createState() => _AuthFormFieldState();

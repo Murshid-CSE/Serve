@@ -1,9 +1,9 @@
 import 'package:community_care_hub/features/blood/domain/repositories/blood_repository.dart';
 
 class RespondToRequest {
-  final BloodRepository _repository;
 
   const RespondToRequest(this._repository);
+  final BloodRepository _repository;
 
   Future<void> call({
     required String requestId,

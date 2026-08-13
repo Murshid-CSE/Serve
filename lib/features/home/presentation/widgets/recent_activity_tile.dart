@@ -2,12 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:community_care_hub/core/constants/app_colors.dart';
 
 class RecentActivityTile extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String subtitle;
-  final String timeAgo;
-  final VoidCallback? onTap;
 
   const RecentActivityTile({
     super.key,
@@ -18,6 +12,12 @@ class RecentActivityTile extends StatelessWidget {
     required this.timeAgo,
     this.onTap,
   });
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final String timeAgo;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {

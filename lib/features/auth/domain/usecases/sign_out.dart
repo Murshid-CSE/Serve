@@ -1,9 +1,9 @@
 import 'package:community_care_hub/features/auth/domain/repositories/auth_repository.dart';
 
 class SignOut {
-  final AuthRepository _repository;
 
   const SignOut(this._repository);
+  final AuthRepository _repository;
 
   Future<void> call() {
     return _repository.signOut();

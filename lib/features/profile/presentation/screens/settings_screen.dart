@@ -27,7 +27,7 @@ class SettingsScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         children: [
           // APPEARANCE
-          _SectionHeader(title: 'Appearance'),
+          const _SectionHeader(title: 'Appearance'),
           Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: SwitchListTile(
@@ -44,7 +44,7 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // ACCOUNT
-          _SectionHeader(title: 'Account'),
+          const _SectionHeader(title: 'Account'),
           Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Column(
@@ -68,7 +68,7 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // ABOUT
-          _SectionHeader(title: 'About'),
+          const _SectionHeader(title: 'About'),
           Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Column(
@@ -114,7 +114,7 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // DANGER ZONE
-          _SectionHeader(title: 'Danger Zone'),
+          const _SectionHeader(title: 'Danger Zone'),
           Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: ListTile(
@@ -159,8 +159,8 @@ class SettingsScreen extends ConsumerWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  final String title;
   const _SectionHeader({required this.title});
+  final String title;
 
   @override
   Widget build(BuildContext context) {
@@ -168,7 +168,7 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title.toUpperCase(),
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
           color: AppColors.onSurfaceVariant,

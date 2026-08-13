@@ -5,10 +5,10 @@ import 'package:community_care_hub/features/emergency/data/datasources/emergency
 import 'package:community_care_hub/core/errors/app_exception.dart';
 
 class EmergencyRepositoryImpl implements EmergencyRepository {
-  final EmergencyRemoteDataSource _remoteDataSource;
-  final Connectivity _connectivity = Connectivity();
 
   EmergencyRepositoryImpl(this._remoteDataSource);
+  final EmergencyRemoteDataSource _remoteDataSource;
+  final Connectivity _connectivity = Connectivity();
 
   Future<void> _checkConnectivity() async {
     final status = await _connectivity.checkConnectivity();
@@ -18,13 +18,13 @@ class EmergencyRepositoryImpl implements EmergencyRepository {
   }
 
   @override
-  Future<List<EmergencyAlertEntity>> getNearbyEmergencyAlerts({
+  Stream<List<EmergencyAlertEntity>> getNearbyEmergencyAlerts({
     required double latitude,
     required double longitude,
     required double radiusKm,
-  }) async {
+  }) {
     try {
-      return await _remoteDataSource.getNearbyEmergencyAlerts(
+      return _remoteDataSource.getNearbyEmergencyAlerts(
         latitude: latitude,
         longitude: longitude,
         radiusKm: radiusKm,
@@ -75,6 +75,28 @@ class EmergencyRepositoryImpl implements EmergencyRepository {
         longitude: longitude,
         contactPhone: contactPhone,
       );
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw FirestoreException(message: e.toString());
+    }
+  }
+
+  @override
+  Stream<List<EmergencyAlertEntity>> getUserAlerts(String userId) {
+    try {
+      return _remoteDataSource.getUserAlerts(userId);
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw FirestoreException(message: e.toString());
+    }
+  }
+
+  @override
+  Stream<List<EmergencyAlertEntity>> getUserResponses(String userId) {
+    try {
+      return _remoteDataSource.getUserResponses(userId);
     } on AppException {
       rethrow;
     } catch (e) {

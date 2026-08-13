@@ -196,10 +196,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 }
 
 class _OnboardingPage {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final List<Color> gradient;
 
   const _OnboardingPage({
     required this.icon,
@@ -207,4 +203,8 @@ class _OnboardingPage {
     required this.subtitle,
     required this.gradient,
   });
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final List<Color> gradient;
 }

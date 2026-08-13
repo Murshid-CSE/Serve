@@ -1,21 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class VolunteerTaskEntity {
-  final String id;
-  final String title;
-  final String description;
-  final String type; // distribution | rescue | event | other
-  final String status; // active | completed | cancelled
-  final String address;
-  final double latitude;
-  final double longitude;
-  final String geohash;
-  final DateTime date;
-  final int volunteersNeeded;
-  final List<String> volunteersJoined;
-  final String creatorId;
-  final String creatorName;
-  final DateTime createdAt;
 
   const VolunteerTaskEntity({
     required this.id,
@@ -54,6 +39,21 @@ class VolunteerTaskEntity {
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
+  final String id;
+  final String title;
+  final String description;
+  final String type; // distribution | rescue | event | other
+  final String status; // active | completed | cancelled
+  final String address;
+  final double latitude;
+  final double longitude;
+  final String geohash;
+  final DateTime date;
+  final int volunteersNeeded;
+  final List<String> volunteersJoined;
+  final String creatorId;
+  final String creatorName;
+  final DateTime createdAt;
 
   Map<String, dynamic> toMap() {
     return {

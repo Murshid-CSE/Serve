@@ -7,46 +7,47 @@ import 'package:community_care_hub/core/errors/app_exception.dart';
 class VolunteerRemoteDataSource {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Get nearby volunteer tasks using geohash prefix range
-  Future<List<VolunteerTaskEntity>> getNearbyVolunteerTasks({
+  /// Get nearby volunteer tasks using geohash prefix range (Stream)
+  Stream<List<VolunteerTaskEntity>> getNearbyVolunteerTasks({
     required double latitude,
     required double longitude,
     required double radiusKm,
-  }) async {
+  }) {
     try {
       final prefix = GeoUtils.getGeohashPrefix(latitude, longitude, radiusKm);
       final range = GeoUtils.getGeohashRange(prefix);
 
-      final snapshot = await _firestore
+      return _firestore
           .collection(FirebaseConstants.volunteerTasksCollection)
           .where('status', isEqualTo: 'active')
           .where('location.geohash', isGreaterThanOrEqualTo: range[0])
           .where('location.geohash', isLessThanOrEqualTo: range[1])
-          .get();
+          .snapshots()
+          .map((snapshot) {
+        final list = snapshot.docs
+            .map((doc) => VolunteerTaskEntity.fromMap(doc.data()))
+            .toList();
 
-      final list = snapshot.docs
-          .map((doc) => VolunteerTaskEntity.fromMap(doc.data()))
-          .toList();
+        // Post-filter by distance and date
+        final activeList = list.where((item) => item.date.isAfter(DateTime.now())).toList();
 
-      // Post-filter by distance and date
-      final activeList = list.where((item) => item.date.isAfter(DateTime.now())).toList();
+        final filtered = GeoUtils.filterByDistance<VolunteerTaskEntity>(
+          items: activeList,
+          centerLat: latitude,
+          centerLng: longitude,
+          radiusKm: radiusKm,
+          getLatitude: (t) => t.latitude,
+          getLongitude: (t) => t.longitude,
+        );
 
-      final filtered = GeoUtils.filterByDistance<VolunteerTaskEntity>(
-        items: activeList,
-        centerLat: latitude,
-        centerLng: longitude,
-        radiusKm: radiusKm,
-        getLatitude: (t) => t.latitude,
-        getLongitude: (t) => t.longitude,
-      );
-
-      return GeoUtils.sortByDistance<VolunteerTaskEntity>(
-        items: filtered,
-        centerLat: latitude,
-        centerLng: longitude,
-        getLatitude: (t) => t.latitude,
-        getLongitude: (t) => t.longitude,
-      );
+        return GeoUtils.sortByDistance<VolunteerTaskEntity>(
+          items: filtered,
+          centerLat: latitude,
+          centerLng: longitude,
+          getLatitude: (t) => t.latitude,
+          getLongitude: (t) => t.longitude,
+        );
+      });
     } on FirebaseException catch (e) {
       throw FirestoreException.fromFirebase(e);
     } catch (e) {
@@ -116,18 +117,18 @@ class VolunteerRemoteDataSource {
     }
   }
 
-  /// Get tasks that the user has joined
-  Future<List<VolunteerTaskEntity>> getUserTasks(String userId) async {
+  /// Get tasks that the user has joined (Stream)
+  Stream<List<VolunteerTaskEntity>> getUserTasks(String userId) {
     try {
-      final snapshot = await _firestore
+      return _firestore
           .collection(FirebaseConstants.volunteerTasksCollection)
           .where('volunteersJoined', arrayContains: userId)
           .orderBy('date', descending: true)
-          .get();
-
-      return snapshot.docs
-          .map((doc) => VolunteerTaskEntity.fromMap(doc.data()))
-          .toList();
+          .limit(50)
+          .snapshots()
+          .map((snapshot) => snapshot.docs
+              .map((doc) => VolunteerTaskEntity.fromMap(doc.data()))
+              .toList());
     } on FirebaseException catch (e) {
       throw FirestoreException.fromFirebase(e);
     } catch (e) {
@@ -135,18 +136,18 @@ class VolunteerRemoteDataSource {
     }
   }
 
-  /// Get tasks created by this user
-  Future<List<VolunteerTaskEntity>> getCreatedTasks(String userId) async {
+  /// Get tasks created by this user (Stream)
+  Stream<List<VolunteerTaskEntity>> getCreatedTasks(String userId) {
     try {
-      final snapshot = await _firestore
+      return _firestore
           .collection(FirebaseConstants.volunteerTasksCollection)
           .where('creatorId', isEqualTo: userId)
           .orderBy('createdAt', descending: true)
-          .get();
-
-      return snapshot.docs
-          .map((doc) => VolunteerTaskEntity.fromMap(doc.data()))
-          .toList();
+          .limit(50)
+          .snapshots()
+          .map((snapshot) => snapshot.docs
+              .map((doc) => VolunteerTaskEntity.fromMap(doc.data()))
+              .toList());
     } on FirebaseException catch (e) {
       throw FirestoreException.fromFirebase(e);
     } catch (e) {

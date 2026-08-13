@@ -2,9 +2,9 @@ import 'package:community_care_hub/features/auth/domain/entities/user_entity.dar
 import 'package:community_care_hub/features/auth/domain/repositories/auth_repository.dart';
 
 class SignInWithGoogle {
-  final AuthRepository _repository;
 
   const SignInWithGoogle(this._repository);
+  final AuthRepository _repository;
 
   Future<UserEntity> call() {
     return _repository.signInWithGoogle();

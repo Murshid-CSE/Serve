@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:community_care_hub/core/constants/app_colors.dart';
 
 class FoodCategoryChip extends StatelessWidget {
-  final String category;
-  final bool isSelected;
-  final ValueChanged<bool>? onSelected;
 
   const FoodCategoryChip({
     super.key,
@@ -12,6 +9,9 @@ class FoodCategoryChip extends StatelessWidget {
     this.isSelected = false,
     this.onSelected,
   });
+  final String category;
+  final bool isSelected;
+  final ValueChanged<bool>? onSelected;
 
   String _getCategoryLabel(String cat) {
     switch (cat.toLowerCase()) {

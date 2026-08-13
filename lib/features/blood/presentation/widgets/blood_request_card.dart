@@ -6,9 +6,6 @@ import 'package:community_care_hub/core/constants/app_colors.dart';
 import 'package:community_care_hub/core/extensions/datetime_extension.dart';
 
 class BloodRequestCard extends StatelessWidget {
-  final BloodRequestEntity request;
-  final VoidCallback onTap;
-  final double? distanceKm;
 
   const BloodRequestCard({
     super.key,
@@ -16,6 +13,9 @@ class BloodRequestCard extends StatelessWidget {
     required this.onTap,
     this.distanceKm,
   });
+  final BloodRequestEntity request;
+  final VoidCallback onTap;
+  final double? distanceKm;
 
   @override
   Widget build(BuildContext context) {

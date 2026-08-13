@@ -2,9 +2,9 @@ import 'package:community_care_hub/features/blood/domain/entities/blood_donor_en
 import 'package:community_care_hub/features/blood/domain/repositories/blood_repository.dart';
 
 class GetNearbyDonors {
-  final BloodRepository _repository;
 
   const GetNearbyDonors(this._repository);
+  final BloodRepository _repository;
 
   Future<List<BloodDonorEntity>> call({
     required String bloodGroup,

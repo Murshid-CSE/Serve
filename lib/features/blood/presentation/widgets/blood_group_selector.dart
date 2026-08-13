@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:community_care_hub/core/constants/app_colors.dart';
 
 class BloodGroupSelector extends StatelessWidget {
-  final String? selectedGroup;
-  final ValueChanged<String> onSelected;
 
   const BloodGroupSelector({
     super.key,
     required this.selectedGroup,
     required this.onSelected,
   });
+  final String? selectedGroup;
+  final ValueChanged<String> onSelected;
 
   static const List<String> bloodGroups = [
     'A+', 'A-', 'B+', 'B-',

@@ -151,21 +151,21 @@ class BloodRemoteDataSource {
     }
   }
 
-  /// Get active open blood requests from Firestore
-  Future<List<BloodRequestEntity>> getActiveRequests() async {
+  /// Get active open blood requests from Firestore (Stream)
+  Stream<List<BloodRequestEntity>> getActiveRequests() {
     try {
-      final snapshot = await _firestore
+      return _firestore
           .collection(FirebaseConstants.bloodRequestsCollection)
           .where('status', whereIn: ['open', 'responding'])
           .orderBy('createdAt', descending: true)
-          .get();
-
-      final list = snapshot.docs
-          .map((doc) => BloodRequestEntity.fromMap(doc.data()))
-          .toList();
-
-      // Filter expired items client-side
-      return list.where((item) => !item.isExpired).toList();
+          .snapshots()
+          .map((snapshot) {
+        final list = snapshot.docs
+            .map((doc) => BloodRequestEntity.fromMap(doc.data()))
+            .toList();
+        // Filter expired items client-side
+        return list.where((item) => !item.isExpired).toList();
+      });
     } on FirebaseException catch (e) {
       throw FirestoreException.fromFirebase(e);
     } catch (e) {
@@ -179,12 +179,34 @@ class BloodRemoteDataSource {
     required String userId,
   }) async {
     try {
-      await _firestore
+      final docRef = _firestore
           .collection(FirebaseConstants.bloodRequestsCollection)
-          .doc(requestId)
-          .update({
-        'respondedBy': FieldValue.arrayUnion([userId]),
-        'status': 'responding',
+          .doc(requestId);
+
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(docRef);
+
+        if (!snapshot.exists) {
+          throw Exception('Blood request does not exist.');
+        }
+
+        final data = snapshot.data()!;
+        final status = data['status'] as String? ?? 'open';
+        final respondedBy = List<String>.from(data['respondedBy'] ?? []);
+
+        if (status != 'open' && status != 'responding') {
+          throw Exception('This blood request is no longer active.');
+        }
+
+        if (respondedBy.contains(userId)) {
+          throw Exception('You have already responded to this request.');
+        }
+
+        transaction.update(docRef, {
+          'respondedBy': FieldValue.arrayUnion([userId]),
+          'status': 'responding',
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
       });
     } on FirebaseException catch (e) {
       throw FirestoreException.fromFirebase(e);
@@ -213,18 +235,39 @@ class BloodRemoteDataSource {
     }
   }
 
-  /// Get requests submitted by a specific user
-  Future<List<BloodRequestEntity>> getUserRequests(String userId) async {
+  /// Get requests submitted by a specific user (Stream)
+  Stream<List<BloodRequestEntity>> getUserRequests(String userId) {
     try {
-      final snapshot = await _firestore
+      return _firestore
           .collection(FirebaseConstants.bloodRequestsCollection)
           .where('requesterId', isEqualTo: userId)
           .orderBy('createdAt', descending: true)
-          .get();
+          .snapshots()
+          .map((snapshot) {
+        return snapshot.docs
+            .map((doc) => BloodRequestEntity.fromMap(doc.data()))
+            .toList();
+      });
+    } on FirebaseException catch (e) {
+      throw FirestoreException.fromFirebase(e);
+    } catch (e) {
+      throw FirestoreException(message: e.toString());
+    }
+  }
 
-      return snapshot.docs
-          .map((doc) => BloodRequestEntity.fromMap(doc.data()))
-          .toList();
+  /// Get requests responded to by a specific user (Stream)
+  Stream<List<BloodRequestEntity>> getUserResponses(String userId) {
+    try {
+      return _firestore
+          .collection(FirebaseConstants.bloodRequestsCollection)
+          .where('respondedBy', arrayContains: userId)
+          .orderBy('createdAt', descending: true)
+          .snapshots()
+          .map((snapshot) {
+        return snapshot.docs
+            .map((doc) => BloodRequestEntity.fromMap(doc.data()))
+            .toList();
+      });
     } on FirebaseException catch (e) {
       throw FirestoreException.fromFirebase(e);
     } catch (e) {

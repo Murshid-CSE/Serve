@@ -1,17 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EmergencyAlertEntity {
-  final String id;
-  final String title;
-  final String description;
-  final String level; // critical | warning | info
-  final String address;
-  final double latitude;
-  final double longitude;
-  final String geohash;
-  final List<String> responders;
-  final String contactPhone;
-  final DateTime createdAt;
 
   const EmergencyAlertEntity({
     required this.id,
@@ -24,6 +13,9 @@ class EmergencyAlertEntity {
     required this.geohash,
     required this.responders,
     required this.contactPhone,
+    required this.creatorId,
+    this.imageUrl,
+    this.imagePublicId,
     required this.createdAt,
   });
 
@@ -39,9 +31,26 @@ class EmergencyAlertEntity {
       geohash: map['location']?['geohash'] as String? ?? '',
       responders: List<String>.from(map['responders'] ?? []),
       contactPhone: map['contactPhone'] as String? ?? '',
+      creatorId: map['creatorId'] as String? ?? '',
+      imageUrl: map['imageUrl'] as String?,
+      imagePublicId: map['imagePublicId'] as String?,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
+  final String id;
+  final String title;
+  final String description;
+  final String level; // critical | warning | info
+  final String address;
+  final double latitude;
+  final double longitude;
+  final String geohash;
+  final List<String> responders;
+  final String contactPhone;
+  final String creatorId;
+  final String? imageUrl;
+  final String? imagePublicId;
+  final DateTime createdAt;
 
   Map<String, dynamic> toMap() {
     return {
@@ -57,6 +66,9 @@ class EmergencyAlertEntity {
       },
       'responders': responders,
       'contactPhone': contactPhone,
+      'creatorId': creatorId,
+      'imageUrl': imageUrl,
+      'imagePublicId': imagePublicId,
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }
@@ -72,6 +84,9 @@ class EmergencyAlertEntity {
     String? geohash,
     List<String>? responders,
     String? contactPhone,
+    String? creatorId,
+    String? imageUrl,
+    String? imagePublicId,
     DateTime? createdAt,
   }) {
     return EmergencyAlertEntity(
@@ -85,6 +100,9 @@ class EmergencyAlertEntity {
       geohash: geohash ?? this.geohash,
       responders: responders ?? this.responders,
       contactPhone: contactPhone ?? this.contactPhone,
+      creatorId: creatorId ?? this.creatorId,
+      imageUrl: imageUrl ?? this.imageUrl,
+      imagePublicId: imagePublicId ?? this.imagePublicId,
       createdAt: createdAt ?? this.createdAt,
     );
   }

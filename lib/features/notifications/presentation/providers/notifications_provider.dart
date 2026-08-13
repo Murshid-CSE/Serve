@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:community_care_hub/features/notifications/domain/entities/app_notification_entity.dart';
 import 'package:community_care_hub/features/auth/presentation/providers/auth_provider.dart';
 import 'package:community_care_hub/core/constants/firebase_constants.dart';
+import 'package:community_care_hub/navigation/app_router.dart';
+import 'package:community_care_hub/navigation/app_routes.dart';
 
 // Firebase Messaging Provider
 final firebaseMessagingProvider = Provider<FirebaseMessaging>((ref) {
@@ -37,16 +40,27 @@ final notificationsListProvider = StreamProvider<List<AppNotificationEntity>>((r
 
 // Notification manager notifier containing subscription mechanics
 final notificationManagerProvider = Provider<NotificationManager>((ref) {
-  return NotificationManager(ref);
+  final manager = NotificationManager(ref);
+  ref.onDispose(() {
+    manager.dispose();
+  });
+  return manager;
 });
 
 class NotificationManager {
+  NotificationManager(this._ref);
   final Ref _ref;
 
-  NotificationManager(this._ref);
+  bool _initialized = false;
+  StreamSubscription<String>? _tokenSubscription;
+  StreamSubscription<RemoteMessage>? _foregroundSubscription;
+  StreamSubscription<RemoteMessage>? _tapSubscription;
 
   /// Initializes messaging and requests permission
   Future<void> initializeNotifications() async {
+    if (_initialized) return;
+    _initialized = true;
+
     final messaging = _ref.read(firebaseMessagingProvider);
 
     // Request permissions
@@ -63,9 +77,46 @@ class NotificationManager {
     }
 
     // Monitor token updates
-    messaging.onTokenRefresh.listen((newToken) {
+    _tokenSubscription = messaging.onTokenRefresh.listen((newToken) {
       _updateUserFcmToken(newToken);
     });
+
+    // 1. Foreground message handler
+    _foregroundSubscription = FirebaseMessaging.onMessage.listen((message) {
+      // Handled automatically or log here if needed
+    });
+
+    // 2. Handle app opened from background via notification tap
+    _tapSubscription = FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      _handleNotificationNavigation(message);
+    });
+
+    // 3. Handle cold start from terminated state via notification tap
+    final initialMessage = await messaging.getInitialMessage();
+    if (initialMessage != null) {
+      _handleNotificationNavigation(initialMessage);
+    }
+  }
+
+  void _handleNotificationNavigation(RemoteMessage message) {
+    final data = message.data;
+    final type = data['type'];
+    final id = data['id'];
+
+    final router = _ref.read(routerProvider);
+
+    if (type != null && id != null) {
+      final String route = switch (type) {
+        'food' => AppRoutes.foodDetail.replaceAll(':id', id),
+        'blood' => AppRoutes.bloodRequestDetail.replaceAll(':id', id),
+        'volunteer' => AppRoutes.taskDetail.replaceAll(':id', id),
+        'emergency' => AppRoutes.emergencyDetail.replaceAll(':id', id),
+        _ => AppRoutes.notifications,
+      };
+      router.push(route);
+    } else {
+      router.push(AppRoutes.notifications);
+    }
   }
 
   /// Subscribe to FCM topics depending on role and settings
@@ -114,7 +165,7 @@ class NotificationManager {
         .where('read', isEqualTo: false)
         .get();
 
-    for (var doc in snapshot.docs) {
+    for (final doc in snapshot.docs) {
       batch.update(doc.reference, {'read': true});
     }
 
@@ -141,5 +192,12 @@ class NotificationManager {
         .collection(FirebaseConstants.usersCollection)
         .doc(user.uid)
         .update({'fcmToken': token});
+  }
+
+  void dispose() {
+    _tokenSubscription?.cancel();
+    _foregroundSubscription?.cancel();
+    _tapSubscription?.cancel();
+    _initialized = false;
   }
 }

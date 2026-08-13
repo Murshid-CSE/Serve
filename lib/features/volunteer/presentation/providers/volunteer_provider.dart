@@ -38,42 +38,42 @@ final volunteerSearchRadiusProvider = StateProvider<double>((ref) => 10.0);
 final volunteerTypeFilterProvider = StateProvider<String?>((ref) => null);
 
 // Nearby Volunteer Tasks Provider
-final nearbyVolunteerTasksProvider = FutureProvider<List<VolunteerTaskEntity>>((ref) async {
+final nearbyVolunteerTasksProvider = StreamProvider.autoDispose<List<VolunteerTaskEntity>>((ref) {
   final userAsync = ref.watch(currentUserProvider);
   final radius = ref.watch(volunteerSearchRadiusProvider);
   final typeFilter = ref.watch(volunteerTypeFilterProvider);
 
   final user = userAsync.value;
   if (user == null || !user.hasLocation) {
-    return [];
+    return Stream.value([]);
   }
 
-  final list = await ref.read(getNearbyTasksUseCaseProvider).call(
+  return ref.watch(getNearbyTasksUseCaseProvider).call(
         latitude: user.latitude,
         longitude: user.longitude,
         radiusKm: radius,
-      );
-
-  if (typeFilter != null) {
-    return list.where((task) => task.type == typeFilter).toList();
-  }
-  return list;
+      ).map((list) {
+        if (typeFilter != null) {
+          return list.where((task) => task.type == typeFilter).toList();
+        }
+        return list;
+      });
 });
 
 // User's joined tasks list provider
-final userVolunteerTasksProvider = FutureProvider<List<VolunteerTaskEntity>>((ref) async {
+final userVolunteerTasksProvider = StreamProvider.autoDispose<List<VolunteerTaskEntity>>((ref) {
   final userAsync = ref.watch(currentUserProvider);
   final user = userAsync.value;
-  if (user == null) return [];
+  if (user == null) return Stream.value([]);
 
   return ref.watch(volunteerRepositoryProvider).getUserTasks(user.uid);
 });
 
 // Tasks created by user provider
-final createdVolunteerTasksProvider = FutureProvider<List<VolunteerTaskEntity>>((ref) async {
+final createdVolunteerTasksProvider = StreamProvider.autoDispose<List<VolunteerTaskEntity>>((ref) {
   final userAsync = ref.watch(currentUserProvider);
   final user = userAsync.value;
-  if (user == null) return [];
+  if (user == null) return Stream.value([]);
 
   return ref.watch(volunteerRepositoryProvider).getCreatedTasks(user.uid);
 });
@@ -84,9 +84,9 @@ final volunteerActionsProvider = Provider<VolunteerActions>((ref) {
 });
 
 class VolunteerActions {
-  final VolunteerRepository _repository;
 
   VolunteerActions(this._repository);
+  final VolunteerRepository _repository;
 
   Future<VolunteerTaskEntity> createTask({
     required String title,

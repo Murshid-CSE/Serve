@@ -108,7 +108,8 @@ class _CreateEmergencyScreenState extends ConsumerState<CreateEmergencyScreen> {
       if (!mounted) return;
 
       // Haptic feedback for emergency
-      HapticFeedback.heavyImpact();
+      await HapticFeedback.heavyImpact();
+      if (!mounted) return;
 
       context.showSuccessSnackBar('Emergency alert created successfully!');
       context.pop();
@@ -145,10 +146,10 @@ class _CreateEmergencyScreenState extends ConsumerState<CreateEmergencyScreen> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.emergency.withValues(alpha: 0.3)),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
                     Icon(Icons.warning_amber_rounded, color: AppColors.emergency, size: 28),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Only report genuine emergencies. False alerts may result in account suspension.',
@@ -295,12 +296,12 @@ class _CreateEmergencyScreenState extends ConsumerState<CreateEmergencyScreen> {
 
               // Location status
               if (_latitude != null && _longitude != null)
-                Padding(
-                  padding: const EdgeInsets.only(left: 4),
+                const Padding(
+                  padding: EdgeInsets.only(left: 4),
                   child: Row(
                     children: [
                       Icon(Icons.gps_fixed_rounded, size: 14, color: AppColors.success),
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6),
                       Text(
                         'GPS location captured',
                         style: TextStyle(fontSize: 12, color: AppColors.success),
@@ -309,12 +310,12 @@ class _CreateEmergencyScreenState extends ConsumerState<CreateEmergencyScreen> {
                   ),
                 )
               else
-                Padding(
-                  padding: const EdgeInsets.only(left: 4),
+                const Padding(
+                  padding: EdgeInsets.only(left: 4),
                   child: Row(
                     children: [
                       Icon(Icons.gps_off_rounded, size: 14, color: AppColors.warning),
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6),
                       Text(
                         'Fetching GPS location...',
                         style: TextStyle(fontSize: 12, color: AppColors.warning),

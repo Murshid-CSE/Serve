@@ -177,16 +177,6 @@ class _AdminRequestsScreenState extends ConsumerState<AdminRequestsScreen>
 }
 
 class _RequestList extends ConsumerWidget {
-  final StreamProvider<List<Map<String, dynamic>>> provider;
-  final String collection;
-  final String label;
-  final String titleField;
-  final String subtitleField;
-  final String statusField;
-  final Future<void> Function(String, String, String) onDelete;
-  final Future<void> Function(String, String, String) onUpdateStatus;
-  final List<String> statusOptions;
-  final Color moduleColor;
 
   const _RequestList({
     required this.provider,
@@ -200,6 +190,16 @@ class _RequestList extends ConsumerWidget {
     required this.statusOptions,
     required this.moduleColor,
   });
+  final StreamProvider<List<Map<String, dynamic>>> provider;
+  final String collection;
+  final String label;
+  final String titleField;
+  final String subtitleField;
+  final String statusField;
+  final Future<void> Function(String, String, String) onDelete;
+  final Future<void> Function(String, String, String) onUpdateStatus;
+  final List<String> statusOptions;
+  final Color moduleColor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -290,7 +290,7 @@ class _RequestList extends ConsumerWidget {
                         ),
                       )),
                       const PopupMenuDivider(),
-                      PopupMenuItem(
+                      const PopupMenuItem(
                         value: 'delete',
                         child: Text('Delete', style: TextStyle(color: AppColors.emergency)),
                       ),

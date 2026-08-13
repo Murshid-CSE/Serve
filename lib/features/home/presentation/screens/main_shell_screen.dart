@@ -2,17 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:community_care_hub/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:community_care_hub/navigation/app_routes.dart';
 
 class MainShellScreen extends ConsumerStatefulWidget {
-  final Widget child;
   const MainShellScreen({super.key, required this.child});
+  final Widget child;
 
   @override
   ConsumerState<MainShellScreen> createState() => _MainShellScreenState();
 }
 
 class _MainShellScreenState extends ConsumerState<MainShellScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationManagerProvider).initializeNotifications();
+      ref.read(notificationManagerProvider).syncTopicSubscriptions();
+    });
+  }
+
   int _calculateSelectedIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
     if (location.startsWith(AppRoutes.home)) return 0;

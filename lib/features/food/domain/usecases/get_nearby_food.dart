@@ -2,11 +2,11 @@ import 'package:community_care_hub/features/food/domain/entities/food_donation_e
 import 'package:community_care_hub/features/food/domain/repositories/food_repository.dart';
 
 class GetNearbyFood {
-  final FoodRepository _repository;
 
   const GetNearbyFood(this._repository);
+  final FoodRepository _repository;
 
-  Future<List<FoodDonationEntity>> call({
+  Stream<List<FoodDonationEntity>> call({
     required double latitude,
     required double longitude,
     required double radiusKm,

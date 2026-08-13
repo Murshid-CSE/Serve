@@ -48,9 +48,9 @@ final authActionsProvider = Provider<AuthActions>((ref) {
 });
 
 class AuthActions {
-  final AuthRepository _repository;
   
   AuthActions(this._repository);
+  final AuthRepository _repository;
   
   Future<UserEntity> signInWithEmail(String email, String password) {
     return _repository.signInWithEmail(email, password);

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:community_care_hub/features/emergency/domain/entities/emergency_alert_entity.dart';
 import 'package:community_care_hub/core/constants/firebase_constants.dart';
@@ -7,42 +8,43 @@ import 'package:community_care_hub/core/errors/app_exception.dart';
 class EmergencyRemoteDataSource {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Get nearby emergency alerts using geohash range queries
-  Future<List<EmergencyAlertEntity>> getNearbyEmergencyAlerts({
+  /// Get nearby emergency alerts using geohash range queries (Stream)
+  Stream<List<EmergencyAlertEntity>> getNearbyEmergencyAlerts({
     required double latitude,
     required double longitude,
     required double radiusKm,
-  }) async {
+  }) {
     try {
       final prefix = GeoUtils.getGeohashPrefix(latitude, longitude, radiusKm);
       final range = GeoUtils.getGeohashRange(prefix);
 
-      final snapshot = await _firestore
+      return _firestore
           .collection(FirebaseConstants.emergencyRequestsCollection)
           .where('location.geohash', isGreaterThanOrEqualTo: range[0])
           .where('location.geohash', isLessThanOrEqualTo: range[1])
-          .get();
+          .snapshots()
+          .map((snapshot) {
+        final list = snapshot.docs
+            .map((doc) => EmergencyAlertEntity.fromMap(doc.data()))
+            .toList();
 
-      final list = snapshot.docs
-          .map((doc) => EmergencyAlertEntity.fromMap(doc.data()))
-          .toList();
+        final filtered = GeoUtils.filterByDistance<EmergencyAlertEntity>(
+          items: list,
+          centerLat: latitude,
+          centerLng: longitude,
+          radiusKm: radiusKm,
+          getLatitude: (a) => a.latitude,
+          getLongitude: (a) => a.longitude,
+        );
 
-      final filtered = GeoUtils.filterByDistance<EmergencyAlertEntity>(
-        items: list,
-        centerLat: latitude,
-        centerLng: longitude,
-        radiusKm: radiusKm,
-        getLatitude: (a) => a.latitude,
-        getLongitude: (a) => a.longitude,
-      );
-
-      return GeoUtils.sortByDistance<EmergencyAlertEntity>(
-        items: filtered,
-        centerLat: latitude,
-        centerLng: longitude,
-        getLatitude: (a) => a.latitude,
-        getLongitude: (a) => a.longitude,
-      );
+        return GeoUtils.sortByDistance<EmergencyAlertEntity>(
+          items: filtered,
+          centerLat: latitude,
+          centerLng: longitude,
+          getLatitude: (a) => a.latitude,
+          getLongitude: (a) => a.longitude,
+        );
+      });
     } on FirebaseException catch (e) {
       throw FirestoreException.fromFirebase(e);
     } catch (e) {
@@ -56,11 +58,30 @@ class EmergencyRemoteDataSource {
     required String userId,
   }) async {
     try {
-      await _firestore
+      final docRef = _firestore
           .collection(FirebaseConstants.emergencyRequestsCollection)
-          .doc(alertId)
-          .update({
-        'responders': FieldValue.arrayUnion([userId]),
+          .doc(alertId);
+
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(docRef);
+        if (!snapshot.exists) {
+          throw const FirestoreException(message: 'Emergency alert not found');
+        }
+
+        final data = snapshot.data();
+        if (data == null) {
+          throw const FirestoreException(message: 'Emergency alert contains no data');
+        }
+
+        final responders = List<String>.from(data['responders'] ?? []);
+        if (responders.contains(userId)) {
+          throw const FirestoreException(message: 'You have already responded to this emergency alert');
+        }
+
+        transaction.update(docRef, {
+          'responders': FieldValue.arrayUnion([userId]),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
       });
     } on FirebaseException catch (e) {
       throw FirestoreException.fromFirebase(e);
@@ -85,6 +106,10 @@ class EmergencyRemoteDataSource {
           .doc();
 
       final geohash = GeoUtils.encodeGeohash(latitude, longitude);
+      final currentUser = fb.FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        throw const AuthException(message: 'User must be signed in to create an emergency alert.');
+      }
 
       final alert = EmergencyAlertEntity(
         id: docRef.id,
@@ -97,11 +122,50 @@ class EmergencyRemoteDataSource {
         geohash: geohash,
         responders: [],
         contactPhone: contactPhone,
+        creatorId: currentUser.uid,
         createdAt: DateTime.now(),
       );
 
       await docRef.set(alert.toMap());
       return alert;
+    } on FirebaseException catch (e) {
+      throw FirestoreException.fromFirebase(e);
+    } catch (e) {
+      throw FirestoreException(message: e.toString());
+    }
+  }
+
+  /// Get alerts created by a specific user (Stream)
+  Stream<List<EmergencyAlertEntity>> getUserAlerts(String userId) {
+    try {
+      return _firestore
+          .collection(FirebaseConstants.emergencyRequestsCollection)
+          .where('creatorId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .limit(50)
+          .snapshots()
+          .map((snapshot) => snapshot.docs
+              .map((doc) => EmergencyAlertEntity.fromMap(doc.data()))
+              .toList());
+    } on FirebaseException catch (e) {
+      throw FirestoreException.fromFirebase(e);
+    } catch (e) {
+      throw FirestoreException(message: e.toString());
+    }
+  }
+
+  /// Get alerts responded to by a specific user (Stream)
+  Stream<List<EmergencyAlertEntity>> getUserResponses(String userId) {
+    try {
+      return _firestore
+          .collection(FirebaseConstants.emergencyRequestsCollection)
+          .where('responders', arrayContains: userId)
+          .orderBy('createdAt', descending: true)
+          .limit(50)
+          .snapshots()
+          .map((snapshot) => snapshot.docs
+              .map((doc) => EmergencyAlertEntity.fromMap(doc.data()))
+              .toList());
     } on FirebaseException catch (e) {
       throw FirestoreException.fromFirebase(e);
     } catch (e) {

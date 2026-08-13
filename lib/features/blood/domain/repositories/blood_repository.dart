@@ -25,7 +25,7 @@ abstract class BloodRepository {
     required double radiusKm,
   });
 
-  Future<List<BloodRequestEntity>> getActiveRequests();
+  Stream<List<BloodRequestEntity>> getActiveRequests();
 
   Future<void> respondToRequest({
     required String requestId,
@@ -34,5 +34,7 @@ abstract class BloodRepository {
 
   Future<void> toggleAvailability({required bool isAvailable});
 
-  Future<List<BloodRequestEntity>> getUserRequests(String userId);
+  Stream<List<BloodRequestEntity>> getUserRequests(String userId);
+
+  Stream<List<BloodRequestEntity>> getUserResponses(String userId);
 }

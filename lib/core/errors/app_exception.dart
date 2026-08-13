@@ -1,13 +1,13 @@
 sealed class AppException implements Exception {
-  final String message;
-  final String? code;
-  final dynamic originalError;
 
   const AppException({
     required this.message,
     this.code,
     this.originalError,
   });
+  final String message;
+  final String? code;
+  final dynamic originalError;
 
   @override
   String toString() => 'AppException($code): $message';
@@ -69,7 +69,7 @@ class FirestoreException extends AppException {
         'Service temporarily unavailable. Please try again.',
       'unavailable' =>
         'Service temporarily unavailable. Please check your connection.',
-      _ => 'Database operation failed. Please try again.',
+      _ => 'Database operation failed: ${error?.message ?? error}',
     };
     return FirestoreException(
       message: message,

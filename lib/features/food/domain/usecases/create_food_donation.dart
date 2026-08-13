@@ -2,9 +2,9 @@ import 'package:community_care_hub/features/food/domain/entities/food_donation_e
 import 'package:community_care_hub/features/food/domain/repositories/food_repository.dart';
 
 class CreateFoodDonation {
-  final FoodRepository _repository;
 
   const CreateFoodDonation(this._repository);
+  final FoodRepository _repository;
 
   Future<FoodDonationEntity> call({
     required String title,

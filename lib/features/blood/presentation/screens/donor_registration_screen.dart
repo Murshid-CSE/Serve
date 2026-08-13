@@ -136,10 +136,10 @@ class _DonorRegistrationScreenState extends ConsumerState<DonorRegistrationScree
                         ),
                       ),
                       const SizedBox(width: 14),
-                      Expanded(
+                      const Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             Text(
                               'Available for Emergency Requests',
                               style: TextStyle(

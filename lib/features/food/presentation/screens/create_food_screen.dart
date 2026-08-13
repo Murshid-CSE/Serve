@@ -266,9 +266,9 @@ class _CreateFoodScreenState extends ConsumerState<CreateFoodScreen> {
                             borderRadius: BorderRadius.circular(16),
                             child: Image.file(_imageFile!, fit: BoxFit.cover),
                           )
-                        : Column(
+                        : const Column(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
+                            children: [
                               Icon(Icons.add_a_photo_rounded, size: 40, color: AppColors.neutral500),
                               SizedBox(height: 8),
                               Text('Add Food Image', style: TextStyle(color: AppColors.neutral600)),

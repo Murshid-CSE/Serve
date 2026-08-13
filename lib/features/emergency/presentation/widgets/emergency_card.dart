@@ -5,9 +5,6 @@ import 'package:community_care_hub/core/constants/app_colors.dart';
 import 'package:community_care_hub/core/extensions/datetime_extension.dart';
 
 class EmergencyCard extends StatefulWidget {
-  final EmergencyAlertEntity alert;
-  final VoidCallback onTap;
-  final double? distanceKm;
 
   const EmergencyCard({
     super.key,
@@ -15,6 +12,9 @@ class EmergencyCard extends StatefulWidget {
     required this.onTap,
     this.distanceKm,
   });
+  final EmergencyAlertEntity alert;
+  final VoidCallback onTap;
+  final double? distanceKm;
 
   @override
   State<EmergencyCard> createState() => _EmergencyCardState();

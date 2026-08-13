@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:community_care_hub/core/constants/app_colors.dart';
 
 class FoodStatusStepper extends StatelessWidget {
-  final String currentStatus;
 
   const FoodStatusStepper({
     super.key,
     required this.currentStatus,
   });
+  final String currentStatus;
 
   int _getCurrentStep() {
     switch (currentStatus) {
@@ -140,8 +140,8 @@ class FoodStatusStepper extends StatelessWidget {
 }
 
 class _StepData {
-  final String label;
-  final IconData icon;
 
   _StepData({required this.label, required this.icon});
+  final String label;
+  final IconData icon;
 }

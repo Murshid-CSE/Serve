@@ -2,9 +2,9 @@ import 'package:community_care_hub/features/auth/domain/entities/user_entity.dar
 import 'package:community_care_hub/features/auth/domain/repositories/auth_repository.dart';
 
 class RegisterWithEmail {
-  final AuthRepository _repository;
 
   const RegisterWithEmail(this._repository);
+  final AuthRepository _repository;
 
   Future<UserEntity> call(
     String name,

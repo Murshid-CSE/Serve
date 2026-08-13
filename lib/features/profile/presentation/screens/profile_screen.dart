@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:community_care_hub/features/auth/presentation/providers/auth_provider.dart';
 import 'package:community_care_hub/core/widgets/app_button.dart';
 import 'package:community_care_hub/core/widgets/app_card.dart';
@@ -50,7 +51,7 @@ class ProfileScreen extends ConsumerWidget {
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: AppColors.primary,
-                        backgroundImage: user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
+                        backgroundImage: user.photoUrl != null ? CachedNetworkImageProvider(user.photoUrl!) : null,
                         child: user.photoUrl == null
                             ? Text(
                                 user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
@@ -261,10 +262,10 @@ class ProfileScreen extends ConsumerWidget {
 }
 
 class _ReliabilityRingPainter extends CustomPainter {
-  final double score;
-  final Color color;
 
   _ReliabilityRingPainter({required this.score, required this.color});
+  final double score;
+  final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {

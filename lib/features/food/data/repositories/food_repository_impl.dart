@@ -6,10 +6,10 @@ import 'package:community_care_hub/features/food/data/datasources/food_remote_da
 import 'package:community_care_hub/core/errors/app_exception.dart';
 
 class FoodRepositoryImpl implements FoodRepository {
-  final FoodRemoteDataSource _remoteDataSource;
-  final Connectivity _connectivity = Connectivity();
 
   FoodRepositoryImpl(this._remoteDataSource);
+  final FoodRemoteDataSource _remoteDataSource;
+  final Connectivity _connectivity = Connectivity();
 
   Future<void> _checkConnectivity() async {
     final status = await _connectivity.checkConnectivity();
@@ -59,14 +59,14 @@ class FoodRepositoryImpl implements FoodRepository {
   }
 
   @override
-  Future<List<FoodDonationEntity>> getNearbyFoodDonations({
+  Stream<List<FoodDonationEntity>> getNearbyFoodDonations({
     required double latitude,
     required double longitude,
     required double radiusKm,
-  }) async {
+  }) {
     // Read operations fallback to cache if offline (managed by Firestore settings)
     try {
-      return await _remoteDataSource.getNearbyFoodDonations(
+      return _remoteDataSource.getNearbyFoodDonations(
         latitude: latitude,
         longitude: longitude,
         radiusKm: radiusKm,
@@ -117,9 +117,9 @@ class FoodRepositoryImpl implements FoodRepository {
   }
 
   @override
-  Future<List<FoodDonationEntity>> getUserDonations(String userId) async {
+  Stream<List<FoodDonationEntity>> getUserDonations(String userId) {
     try {
-      return await _remoteDataSource.getUserDonations(userId);
+      return _remoteDataSource.getUserDonations(userId);
     } on AppException {
       rethrow;
     } catch (e) {
@@ -128,9 +128,9 @@ class FoodRepositoryImpl implements FoodRepository {
   }
 
   @override
-  Future<List<FoodDonationEntity>> getAcceptedTasks(String userId) async {
+  Stream<List<FoodDonationEntity>> getAcceptedTasks(String userId) {
     try {
-      return await _remoteDataSource.getAcceptedTasks(userId);
+      return _remoteDataSource.getAcceptedTasks(userId);
     } on AppException {
       rethrow;
     } catch (e) {

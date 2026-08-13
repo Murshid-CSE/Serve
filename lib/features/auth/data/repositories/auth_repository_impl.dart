@@ -6,10 +6,10 @@ import 'package:community_care_hub/features/auth/data/datasources/auth_remote_da
 import 'package:community_care_hub/core/errors/app_exception.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  final AuthRemoteDataSource _remoteDataSource;
-  final Connectivity _connectivity = Connectivity();
 
   AuthRepositoryImpl(this._remoteDataSource);
+  final AuthRemoteDataSource _remoteDataSource;
+  final Connectivity _connectivity = Connectivity();
 
   Future<void> _checkConnectivity() async {
     final status = await _connectivity.checkConnectivity();

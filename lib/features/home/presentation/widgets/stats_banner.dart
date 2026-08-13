@@ -3,9 +3,6 @@ import 'package:community_care_hub/core/widgets/app_card.dart';
 import 'package:community_care_hub/core/constants/app_colors.dart';
 
 class StatsBanner extends StatelessWidget {
-  final int foodSaved;
-  final int bloodDonated;
-  final int tasksCompleted;
 
   const StatsBanner({
     super.key,
@@ -13,6 +10,9 @@ class StatsBanner extends StatelessWidget {
     required this.bloodDonated,
     required this.tasksCompleted,
   });
+  final int foodSaved;
+  final int bloodDonated;
+  final int tasksCompleted;
 
   @override
   Widget build(BuildContext context) {

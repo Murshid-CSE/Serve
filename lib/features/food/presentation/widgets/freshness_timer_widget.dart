@@ -2,14 +2,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 class FreshnessTimerWidget extends StatefulWidget {
-  final DateTime expiresAt;
-  final bool compact;
 
   const FreshnessTimerWidget({
     super.key,
     required this.expiresAt,
     this.compact = false,
   });
+  final DateTime expiresAt;
+  final bool compact;
 
   @override
   State<FreshnessTimerWidget> createState() => _FreshnessTimerWidgetState();

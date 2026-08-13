@@ -66,7 +66,7 @@ class BloodHistoryScreen extends ConsumerWidget {
                       request: request,
                       distanceKm: dist,
                       onTap: () {
-                        context.push('/blood/${request.id}');
+                        context.push('/blood/request/${request.id}');
                       },
                     );
                   },

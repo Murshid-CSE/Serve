@@ -1,24 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class BloodRequestEntity {
-  final String id;
-  final String requesterId;
-  final String requesterName;
-  final String requesterPhone;
-  final String patientName;
-  final String bloodGroup;
-  final int unitsNeeded;
-  final String hospitalName;
-  final String hospitalAddress;
-  final double latitude;
-  final double longitude;
-  final String geohash;
-  final bool isEmergency;
-  final String status; // open | responding | fulfilled | cancelled | expired
-  final List<String> respondedBy;
-  final DateTime? fulfilledAt;
-  final DateTime expiresAt;
-  final DateTime createdAt;
 
   const BloodRequestEntity({
     required this.id,
@@ -63,6 +45,24 @@ class BloodRequestEntity {
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
+  final String id;
+  final String requesterId;
+  final String requesterName;
+  final String requesterPhone;
+  final String patientName;
+  final String bloodGroup;
+  final int unitsNeeded;
+  final String hospitalName;
+  final String hospitalAddress;
+  final double latitude;
+  final double longitude;
+  final String geohash;
+  final bool isEmergency;
+  final String status; // open | responding | fulfilled | cancelled | expired
+  final List<String> respondedBy;
+  final DateTime? fulfilledAt;
+  final DateTime expiresAt;
+  final DateTime createdAt;
 
   Map<String, dynamic> toMap() {
     return {

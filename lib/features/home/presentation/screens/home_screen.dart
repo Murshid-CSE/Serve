@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:community_care_hub/features/auth/presentation/providers/auth_provider.dart';
 import 'package:community_care_hub/features/home/presentation/widgets/module_card.dart';
 import 'package:community_care_hub/features/home/presentation/widgets/stats_banner.dart';
@@ -69,49 +70,57 @@ class HomeScreen extends ConsumerWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 24,
-                                  backgroundColor: Colors.white24,
-                                  backgroundImage: user.photoUrl != null
-                                      ? NetworkImage(user.photoUrl!)
-                                      : null,
-                                  child: user.photoUrl == null
-                                      ? Text(
-                                          user.name.isNotEmpty
-                                              ? user.name[0].toUpperCase()
-                                              : 'U',
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 24,
+                                    backgroundColor: Colors.white24,
+                                    backgroundImage: user.photoUrl != null
+                                        ? CachedNetworkImageProvider(user.photoUrl!)
+                                        : null,
+                                    child: user.photoUrl == null
+                                        ? Text(
+                                            user.name.isNotEmpty
+                                                ? user.name[0].toUpperCase()
+                                                : 'U',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 20,
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          greeting,
+                                          style: const TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 14,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Text(
+                                          user.name,
                                           style: const TextStyle(
                                             color: Colors.white,
-                                            fontWeight: FontWeight.bold,
                                             fontSize: 20,
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                        )
-                                      : null,
-                                ),
-                                const SizedBox(width: 12),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      greeting,
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 14,
-                                      ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
                                     ),
-                                    Text(
-                                      user.name,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                  ),
+                                ],
+                              ),
                             ),
                             // Notification bell
                             IconButton(
@@ -129,7 +138,7 @@ class HomeScreen extends ConsumerWidget {
                         const SizedBox(height: 28),
                         // Impact statement
                         Text(
-                          "Your Care Impact Score: ${user.impactScore.round()}",
+                          'Your Care Impact Score: ${user.impactScore.round()}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 22,
@@ -138,7 +147,7 @@ class HomeScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         const Text(
-                          "Thank you for keeping the coordination workflow alive!",
+                          'Thank you for keeping the coordination workflow alive!',
                           style: TextStyle(
                             color: Colors.white70,
                             fontSize: 13,
@@ -255,21 +264,21 @@ class HomeScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        RecentActivityTile(
+                        const RecentActivityTile(
                           icon: Icons.restaurant_rounded,
                           iconColor: AppColors.foodModule,
                           title: 'Surplus Cooked Meals Shared',
                           subtitle: 'Delivered to Shelter home',
                           timeAgo: '2h ago',
                         ),
-                        RecentActivityTile(
+                        const RecentActivityTile(
                           icon: Icons.bloodtype_rounded,
                           iconColor: AppColors.bloodModule,
                           title: 'Emergency Request Posted',
                           subtitle: 'O+ blood required at City Hospital',
                           timeAgo: '4h ago',
                         ),
-                        RecentActivityTile(
+                        const RecentActivityTile(
                           icon: Icons.check_circle_rounded,
                           iconColor: AppColors.success,
                           title: 'Joined Care Hub Network',

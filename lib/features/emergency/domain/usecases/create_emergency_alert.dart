@@ -2,9 +2,9 @@ import 'package:community_care_hub/features/emergency/domain/entities/emergency_
 import 'package:community_care_hub/features/emergency/domain/repositories/emergency_repository.dart';
 
 class CreateEmergencyAlert {
-  final EmergencyRepository repository;
 
   const CreateEmergencyAlert(this.repository);
+  final EmergencyRepository repository;
 
   Future<EmergencyAlertEntity> call({
     required String title,

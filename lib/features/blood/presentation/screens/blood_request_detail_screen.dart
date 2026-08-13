@@ -13,12 +13,12 @@ import 'package:community_care_hub/core/utils/geo_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class BloodRequestDetailScreen extends ConsumerStatefulWidget {
-  final String requestId;
 
   const BloodRequestDetailScreen({
     super.key,
     required this.requestId,
   });
+  final String requestId;
 
   @override
   ConsumerState<BloodRequestDetailScreen> createState() => _BloodRequestDetailScreenState();

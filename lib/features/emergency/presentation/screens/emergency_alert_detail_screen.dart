@@ -12,12 +12,12 @@ import 'package:community_care_hub/core/constants/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class EmergencyAlertDetailScreen extends ConsumerStatefulWidget {
-  final String alertId;
 
   const EmergencyAlertDetailScreen({
     super.key,
     required this.alertId,
   });
+  final String alertId;
 
   @override
   ConsumerState<EmergencyAlertDetailScreen> createState() => _EmergencyAlertDetailScreenState();
@@ -224,10 +224,10 @@ class _EmergencyAlertDetailScreenState extends ConsumerState<EmergencyAlertDetai
                             child: Icon(Icons.phone_android_rounded, color: alertColor),
                           ),
                           const SizedBox(width: 12),
-                          Expanded(
+                          const Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
+                              children: [
                                 Text(
                                   'Reporter Contact',
                                   style: TextStyle(fontSize: 11, color: AppColors.neutral600),
@@ -262,9 +262,9 @@ class _EmergencyAlertDetailScreenState extends ConsumerState<EmergencyAlertDetai
                         color: AppColors.successSurface,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
+                        children: [
                           Icon(Icons.check_circle_rounded, color: AppColors.success),
                           SizedBox(width: 10),
                           Text(

@@ -1,15 +1,14 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:uuid/uuid.dart';
 import 'package:community_care_hub/features/food/domain/entities/food_donation_entity.dart';
 import 'package:community_care_hub/core/constants/firebase_constants.dart';
 import 'package:community_care_hub/core/utils/geo_utils.dart';
 import 'package:community_care_hub/core/errors/app_exception.dart';
+import 'package:community_care_hub/core/services/cloudinary_service.dart';
 
 class FoodRemoteDataSource {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
   final _uuid = const Uuid();
 
   /// Create a food donation record in Firestore + upload image if provided
@@ -27,18 +26,18 @@ class FoodRemoteDataSource {
     required String donorPhone,
     required String? imagePath,
   }) async {
-    try {
-      final id = _uuid.v4();
-      String? imageUrl;
+    final id = _uuid.v4();
+    String? imageUrl;
+    String? imagePublicId;
+    String? deleteToken;
 
+    try {
       // 1. Upload compressed image if path is present
       if (imagePath != null) {
-        final ref = _storage
-            .ref()
-            .child(FirebaseConstants.foodImagesPath)
-            .child('$id.jpg');
-        final uploadTask = await ref.putFile(File(imagePath));
-        imageUrl = await uploadTask.ref.getDownloadURL();
+        final uploadResult = await CloudinaryService.uploadFoodImage(File(imagePath));
+        imageUrl = uploadResult.secureUrl;
+        imagePublicId = uploadResult.publicId;
+        deleteToken = uploadResult.deleteToken;
       }
 
       final geohash = GeoUtils.encodeGeohash(latitude, longitude, precision: 7);
@@ -55,6 +54,7 @@ class FoodRemoteDataSource {
         category: category,
         quantity: quantity,
         imageUrl: imageUrl,
+        imagePublicId: imagePublicId,
         status: 'available',
         pickupAddress: pickupAddress,
         latitude: latitude,
@@ -71,52 +71,60 @@ class FoodRemoteDataSource {
 
       return donation;
     } on FirebaseException catch (e) {
+      if (deleteToken != null) {
+        await CloudinaryService.deleteByToken(deleteToken);
+      }
       throw FirestoreException.fromFirebase(e);
     } catch (e) {
+      if (deleteToken != null) {
+        await CloudinaryService.deleteByToken(deleteToken);
+      }
+      if (e is AppException) rethrow;
       throw FirestoreException(message: e.toString());
     }
   }
 
   /// Query nearby food donations using Geohash prefix range
-  Future<List<FoodDonationEntity>> getNearbyFoodDonations({
+  Stream<List<FoodDonationEntity>> getNearbyFoodDonations({
     required double latitude,
     required double longitude,
     required double radiusKm,
-  }) async {
+  }) {
     try {
       final prefix = GeoUtils.getGeohashPrefix(latitude, longitude, radiusKm);
       final range = GeoUtils.getGeohashRange(prefix);
 
-      final snapshot = await _firestore
+      return _firestore
           .collection(FirebaseConstants.foodDonationsCollection)
           .where('status', isEqualTo: 'available')
           .where('pickupLocation.geohash', isGreaterThanOrEqualTo: range[0])
           .where('pickupLocation.geohash', isLessThanOrEqualTo: range[1])
-          .get();
+          .snapshots()
+          .map((snapshot) {
+        final list = snapshot.docs
+            .map((doc) => FoodDonationEntity.fromMap(doc.data()))
+            .toList();
 
-      final list = snapshot.docs
-          .map((doc) => FoodDonationEntity.fromMap(doc.data()))
-          .toList();
+        // Post-filter list by exact Haversine distance and expiry time
+        final activeList = list.where((item) => !item.isExpired).toList();
 
-      // Post-filter list by exact Haversine distance and expiry time
-      final activeList = list.where((item) => !item.isExpired).toList();
+        final filtered = GeoUtils.filterByDistance<FoodDonationEntity>(
+          items: activeList,
+          centerLat: latitude,
+          centerLng: longitude,
+          radiusKm: radiusKm,
+          getLatitude: (item) => item.latitude,
+          getLongitude: (item) => item.longitude,
+        );
 
-      final filtered = GeoUtils.filterByDistance<FoodDonationEntity>(
-        items: activeList,
-        centerLat: latitude,
-        centerLng: longitude,
-        radiusKm: radiusKm,
-        getLatitude: (item) => item.latitude,
-        getLongitude: (item) => item.longitude,
-      );
-
-      return GeoUtils.sortByDistance<FoodDonationEntity>(
-        items: filtered,
-        centerLat: latitude,
-        centerLng: longitude,
-        getLatitude: (item) => item.latitude,
-        getLongitude: (item) => item.longitude,
-      );
+        return GeoUtils.sortByDistance<FoodDonationEntity>(
+          items: filtered,
+          centerLat: latitude,
+          centerLng: longitude,
+          getLatitude: (item) => item.latitude,
+          getLongitude: (item) => item.longitude,
+        );
+      });
     } on FirebaseException catch (e) {
       throw FirestoreException.fromFirebase(e);
     } catch (e) {
@@ -177,6 +185,20 @@ class FoodRemoteDataSource {
     required String status,
   }) async {
     try {
+      const validStatuses = {
+        'available',
+        'accepted',
+        'collected',
+        'delivered',
+        'completed',
+        'expired',
+        'cancelled',
+      };
+
+      if (!validStatuses.contains(status)) {
+        throw ValidationException(message: 'Invalid status: $status');
+      }
+
       final Map<String, dynamic> updates = {'status': status};
 
       if (status == 'collected') {
@@ -199,17 +221,16 @@ class FoodRemoteDataSource {
   }
 
   /// Get donations submitted by a specific donor
-  Future<List<FoodDonationEntity>> getUserDonations(String userId) async {
+  Stream<List<FoodDonationEntity>> getUserDonations(String userId) {
     try {
-      final snapshot = await _firestore
+      return _firestore
           .collection(FirebaseConstants.foodDonationsCollection)
           .where('donorId', isEqualTo: userId)
           .orderBy('createdAt', descending: true)
-          .get();
-
-      return snapshot.docs
-          .map((doc) => FoodDonationEntity.fromMap(doc.data()))
-          .toList();
+          .snapshots()
+          .map((snapshot) => snapshot.docs
+              .map((doc) => FoodDonationEntity.fromMap(doc.data()))
+              .toList());
     } on FirebaseException catch (e) {
       throw FirestoreException.fromFirebase(e);
     } catch (e) {
@@ -218,17 +239,16 @@ class FoodRemoteDataSource {
   }
 
   /// Get tasks accepted by a volunteer
-  Future<List<FoodDonationEntity>> getAcceptedTasks(String userId) async {
+  Stream<List<FoodDonationEntity>> getAcceptedTasks(String userId) {
     try {
-      final snapshot = await _firestore
+      return _firestore
           .collection(FirebaseConstants.foodDonationsCollection)
           .where('acceptedBy', isEqualTo: userId)
           .orderBy('createdAt', descending: true)
-          .get();
-
-      return snapshot.docs
-          .map((doc) => FoodDonationEntity.fromMap(doc.data()))
-          .toList();
+          .snapshots()
+          .map((snapshot) => snapshot.docs
+              .map((doc) => FoodDonationEntity.fromMap(doc.data()))
+              .toList());
     } on FirebaseException catch (e) {
       throw FirestoreException.fromFirebase(e);
     } catch (e) {

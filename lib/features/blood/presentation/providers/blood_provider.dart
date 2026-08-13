@@ -49,14 +49,14 @@ final bloodSearchRadiusProvider = StateProvider<double>((ref) => 25.0);
 final bloodGroupQueryFilterProvider = StateProvider<String?>((ref) => null);
 
 // Active Blood Requests Provider
-final activeBloodRequestsProvider = FutureProvider<List<BloodRequestEntity>>((ref) async {
-  final list = await ref.read(bloodRepositoryProvider).getActiveRequests();
+final activeBloodRequestsProvider = StreamProvider.autoDispose<List<BloodRequestEntity>>((ref) {
+  final stream = ref.read(bloodRepositoryProvider).getActiveRequests();
   final groupFilter = ref.watch(bloodGroupQueryFilterProvider);
 
   if (groupFilter != null) {
-    return list.where((item) => item.bloodGroup == groupFilter).toList();
+    return stream.map((list) => list.where((item) => item.bloodGroup == groupFilter).toList());
   }
-  return list;
+  return stream;
 });
 
 // Nearby Compatible Donors Provider (for specific blood requests)
@@ -78,10 +78,19 @@ final nearbyCompatibleDonorsProvider = FutureProvider.family<List<BloodDonorEnti
 });
 
 // User's own blood requests history
-final userBloodRequestsProvider = FutureProvider<List<BloodRequestEntity>>((ref) async {
+final userBloodRequestsProvider = StreamProvider.autoDispose<List<BloodRequestEntity>>((ref) {
   final userAsync = ref.watch(currentUserProvider);
   final user = userAsync.value;
-  if (user == null) return [];
+  if (user == null) return Stream.value([]);
 
   return ref.watch(bloodRepositoryProvider).getUserRequests(user.uid);
+});
+
+// User's blood responses history
+final userBloodResponsesProvider = StreamProvider.autoDispose<List<BloodRequestEntity>>((ref) {
+  final userAsync = ref.watch(currentUserProvider);
+  final user = userAsync.value;
+  if (user == null) return Stream.value([]);
+
+  return ref.watch(bloodRepositoryProvider).getUserResponses(user.uid);
 });

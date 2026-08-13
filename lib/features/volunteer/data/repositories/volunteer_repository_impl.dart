@@ -5,10 +5,10 @@ import 'package:community_care_hub/features/volunteer/data/datasources/volunteer
 import 'package:community_care_hub/core/errors/app_exception.dart';
 
 class VolunteerRepositoryImpl implements VolunteerRepository {
-  final VolunteerRemoteDataSource _remoteDataSource;
-  final Connectivity _connectivity = Connectivity();
 
   VolunteerRepositoryImpl(this._remoteDataSource);
+  final VolunteerRemoteDataSource _remoteDataSource;
+  final Connectivity _connectivity = Connectivity();
 
   Future<void> _checkConnectivity() async {
     final status = await _connectivity.checkConnectivity();
@@ -18,13 +18,13 @@ class VolunteerRepositoryImpl implements VolunteerRepository {
   }
 
   @override
-  Future<List<VolunteerTaskEntity>> getNearbyVolunteerTasks({
+  Stream<List<VolunteerTaskEntity>> getNearbyVolunteerTasks({
     required double latitude,
     required double longitude,
     required double radiusKm,
-  }) async {
+  }) {
     try {
-      return await _remoteDataSource.getNearbyVolunteerTasks(
+      return _remoteDataSource.getNearbyVolunteerTasks(
         latitude: latitude,
         longitude: longitude,
         radiusKm: radiusKm,
@@ -73,9 +73,9 @@ class VolunteerRepositoryImpl implements VolunteerRepository {
   }
 
   @override
-  Future<List<VolunteerTaskEntity>> getUserTasks(String userId) async {
+  Stream<List<VolunteerTaskEntity>> getUserTasks(String userId) {
     try {
-      return await _remoteDataSource.getUserTasks(userId);
+      return _remoteDataSource.getUserTasks(userId);
     } on AppException {
       rethrow;
     } catch (e) {
@@ -84,9 +84,9 @@ class VolunteerRepositoryImpl implements VolunteerRepository {
   }
 
   @override
-  Future<List<VolunteerTaskEntity>> getCreatedTasks(String userId) async {
+  Stream<List<VolunteerTaskEntity>> getCreatedTasks(String userId) {
     try {
-      return await _remoteDataSource.getCreatedTasks(userId);
+      return _remoteDataSource.getCreatedTasks(userId);
     } on AppException {
       rethrow;
     } catch (e) {

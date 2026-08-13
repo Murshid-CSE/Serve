@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:community_care_hub/core/constants/app_colors.dart';
 
 class GoogleSignInButton extends StatelessWidget {
-  final VoidCallback onPressed;
-  final bool isLoading;
 
   const GoogleSignInButton({
     super.key,
     required this.onPressed,
     this.isLoading = false,
   });
+  final VoidCallback onPressed;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {

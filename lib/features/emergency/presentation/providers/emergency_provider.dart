@@ -19,20 +19,38 @@ final emergencyRepositoryProvider = Provider<EmergencyRepository>((ref) {
 final emergencySearchRadiusProvider = StateProvider<double>((ref) => 15.0);
 
 // Nearby Emergency Alerts Provider
-final nearbyEmergencyAlertsProvider = FutureProvider<List<EmergencyAlertEntity>>((ref) async {
+final nearbyEmergencyAlertsProvider = StreamProvider.autoDispose<List<EmergencyAlertEntity>>((ref) {
   final userAsync = ref.watch(currentUserProvider);
   final radius = ref.watch(emergencySearchRadiusProvider);
 
   final user = userAsync.value;
   if (user == null || !user.hasLocation) {
-    return [];
+    return Stream.value([]);
   }
 
-  return ref.read(emergencyRepositoryProvider).getNearbyEmergencyAlerts(
+  return ref.watch(emergencyRepositoryProvider).getNearbyEmergencyAlerts(
         latitude: user.latitude,
         longitude: user.longitude,
         radiusKm: radius,
       );
+});
+
+// User's own emergency alerts provider
+final userEmergencyAlertsProvider = StreamProvider.autoDispose<List<EmergencyAlertEntity>>((ref) {
+  final userAsync = ref.watch(currentUserProvider);
+  final user = userAsync.value;
+  if (user == null) return Stream.value([]);
+
+  return ref.watch(emergencyRepositoryProvider).getUserAlerts(user.uid);
+});
+
+// User's responses to emergencies provider
+final userEmergencyResponsesProvider = StreamProvider.autoDispose<List<EmergencyAlertEntity>>((ref) {
+  final userAsync = ref.watch(currentUserProvider);
+  final user = userAsync.value;
+  if (user == null) return Stream.value([]);
+
+  return ref.watch(emergencyRepositoryProvider).getUserResponses(user.uid);
 });
 
 // Emergency Actions class for use cases
@@ -41,9 +59,9 @@ final emergencyActionsProvider = Provider<EmergencyActions>((ref) {
 });
 
 class EmergencyActions {
-  final EmergencyRepository _repository;
 
   EmergencyActions(this._repository);
+  final EmergencyRepository _repository;
 
   Future<void> respondToEmergency({required String alertId, required String userId}) {
     return _repository.respondToEmergencyAlert(alertId: alertId, userId: userId);

@@ -7,10 +7,10 @@ import 'package:community_care_hub/features/blood/data/datasources/blood_remote_
 import 'package:community_care_hub/core/errors/app_exception.dart';
 
 class BloodRepositoryImpl implements BloodRepository {
-  final BloodRemoteDataSource _remoteDataSource;
-  final Connectivity _connectivity = Connectivity();
 
   BloodRepositoryImpl(this._remoteDataSource);
+  final BloodRemoteDataSource _remoteDataSource;
+  final Connectivity _connectivity = Connectivity();
 
   Future<void> _checkConnectivity() async {
     final status = await _connectivity.checkConnectivity();
@@ -103,9 +103,9 @@ class BloodRepositoryImpl implements BloodRepository {
   }
 
   @override
-  Future<List<BloodRequestEntity>> getActiveRequests() async {
+  Stream<List<BloodRequestEntity>> getActiveRequests() {
     try {
-      return await _remoteDataSource.getActiveRequests();
+      return _remoteDataSource.getActiveRequests();
     } on AppException {
       rethrow;
     } catch (e) {
@@ -152,9 +152,20 @@ class BloodRepositoryImpl implements BloodRepository {
   }
 
   @override
-  Future<List<BloodRequestEntity>> getUserRequests(String userId) async {
+  Stream<List<BloodRequestEntity>> getUserRequests(String userId) {
     try {
-      return await _remoteDataSource.getUserRequests(userId);
+      return _remoteDataSource.getUserRequests(userId);
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw FirestoreException(message: e.toString());
+    }
+  }
+
+  @override
+  Stream<List<BloodRequestEntity>> getUserResponses(String userId) {
+    try {
+      return _remoteDataSource.getUserResponses(userId);
     } on AppException {
       rethrow;
     } catch (e) {

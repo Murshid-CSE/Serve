@@ -15,12 +15,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class FoodDetailScreen extends ConsumerStatefulWidget {
-  final String donationId;
 
   const FoodDetailScreen({
     super.key,
     required this.donationId,
   });
+  final String donationId;
 
   @override
   ConsumerState<FoodDetailScreen> createState() => _FoodDetailScreenState();
@@ -387,6 +387,18 @@ class _FoodDetailScreenState extends ConsumerState<FoodDetailScreen> {
           variant: AppButtonVariant.filled,
           color: AppColors.secondary,
         );
+      } else if (isDonor) {
+        return _buildDonorProgressCard(
+          volunteerName: donation.acceptedByName ?? 'A volunteer',
+          statusMessage: 'has accepted your rescue task',
+          timestamp: donation.acceptedAt,
+          steps: const [
+            _ProgressStep(label: 'Accepted', isComplete: true),
+            _ProgressStep(label: 'Collected', isComplete: false),
+            _ProgressStep(label: 'Delivering', isComplete: false),
+            _ProgressStep(label: 'Completed', isComplete: false),
+          ],
+        );
       }
     }
 
@@ -405,23 +417,51 @@ class _FoodDetailScreenState extends ConsumerState<FoodDetailScreen> {
           variant: AppButtonVariant.filled,
           color: AppColors.secondary,
         );
+      } else if (isDonor) {
+        return _buildDonorProgressCard(
+          volunteerName: donation.acceptedByName ?? 'Volunteer',
+          statusMessage: 'has collected the food and is on the way',
+          timestamp: donation.collectedAt,
+          steps: const [
+            _ProgressStep(label: 'Accepted', isComplete: true),
+            _ProgressStep(label: 'Collected', isComplete: true),
+            _ProgressStep(label: 'Delivering', isComplete: false),
+            _ProgressStep(label: 'Completed', isComplete: false),
+          ],
+        );
       }
     }
 
     if (donation.status == 'delivered') {
       if (isDonor) {
-        return AppButton(
-          label: 'Confirm Completion & Rate Reliability',
-          onPressed: _isActionLoading
-              ? null
-              : () => _updateStatus(
-                    'completed',
-                    'Rescue coordination flow completed! Impact scores updated.',
-                  ),
-          isLoading: _isActionLoading,
-          isExpanded: true,
-          variant: AppButtonVariant.filled,
-          color: AppColors.success,
+        return Column(
+          children: [
+            _buildDonorProgressCard(
+              volunteerName: donation.acceptedByName ?? 'Volunteer',
+              statusMessage: 'has delivered the food',
+              timestamp: donation.deliveredAt,
+              steps: const [
+                _ProgressStep(label: 'Accepted', isComplete: true),
+                _ProgressStep(label: 'Collected', isComplete: true),
+                _ProgressStep(label: 'Delivered', isComplete: true),
+                _ProgressStep(label: 'Completed', isComplete: false),
+              ],
+            ),
+            const SizedBox(height: 16),
+            AppButton(
+              label: 'Confirm Completion & Rate Reliability',
+              onPressed: _isActionLoading
+                  ? null
+                  : () => _updateStatus(
+                        'completed',
+                        'Rescue coordination flow completed! Impact scores updated.',
+                      ),
+              isLoading: _isActionLoading,
+              isExpanded: true,
+              variant: AppButtonVariant.filled,
+              color: AppColors.success,
+            ),
+          ],
         );
       } else {
         return const Center(
@@ -458,4 +498,134 @@ class _FoodDetailScreenState extends ConsumerState<FoodDetailScreen> {
 
     return const SizedBox();
   }
+
+  Widget _buildDonorProgressCard({
+    required String volunteerName,
+    required String statusMessage,
+    required List<_ProgressStep> steps,
+    DateTime? timestamp,
+  }) {
+    final timeStr = timestamp != null
+        ? '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}'
+        : '';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.secondarySurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.secondary.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Volunteer info header
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: AppColors.secondary,
+                child: Text(
+                  volunteerName.isNotEmpty ? volunteerName[0].toUpperCase() : 'V',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      volunteerName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: AppColors.neutral900,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      '$statusMessage${timeStr.isNotEmpty ? ' at $timeStr' : ''}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.neutral600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Progress steps
+          Row(
+            children: steps.asMap().entries.map((entry) {
+              final index = entry.key;
+              final step = entry.value;
+              final isLast = index == steps.length - 1;
+
+              return Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Icon(
+                            step.isComplete
+                                ? Icons.check_circle_rounded
+                                : Icons.radio_button_unchecked_rounded,
+                            color: step.isComplete
+                                ? AppColors.success
+                                : AppColors.neutral400,
+                            size: 22,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            step.label,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: step.isComplete
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: step.isComplete
+                                  ? AppColors.neutral900
+                                  : AppColors.neutral500,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (!isLast)
+                      Container(
+                        width: 12,
+                        height: 2,
+                        color: step.isComplete
+                            ? AppColors.success
+                            : AppColors.neutral300,
+                      ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressStep {
+  const _ProgressStep({
+    required this.label,
+    required this.isComplete,
+  });
+  final String label;
+  final bool isComplete;
 }

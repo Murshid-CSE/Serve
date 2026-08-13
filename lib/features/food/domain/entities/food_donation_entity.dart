@@ -1,28 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FoodDonationEntity {
-  final String id;
-  final String donorId;
-  final String donorName;
-  final String donorPhone;
-  final String title;
-  final String description;
-  final String category; // cooked | raw | packaged | fruits | other
-  final String quantity;
-  final String? imageUrl;
-  final String status; // available | accepted | collected | delivered | completed | expired
-  final String pickupAddress;
-  final double latitude;
-  final double longitude;
-  final String geohash;
-  final DateTime expiresAt;
-  final String? acceptedBy;
-  final String? acceptedByName;
-  final DateTime? acceptedAt;
-  final DateTime? collectedAt;
-  final DateTime? deliveredAt;
-  final DateTime? completedAt;
-  final DateTime createdAt;
 
   const FoodDonationEntity({
     required this.id,
@@ -34,6 +12,7 @@ class FoodDonationEntity {
     required this.category,
     required this.quantity,
     this.imageUrl,
+    this.imagePublicId,
     required this.status,
     required this.pickupAddress,
     required this.latitude,
@@ -60,6 +39,7 @@ class FoodDonationEntity {
       category: map['category'] as String? ?? 'other',
       quantity: map['quantity'] as String? ?? '',
       imageUrl: map['imageUrl'] as String?,
+      imagePublicId: map['imagePublicId'] as String?,
       status: map['status'] as String? ?? 'available',
       pickupAddress: map['pickupLocation']?['address'] as String? ?? '',
       latitude: (map['pickupLocation']?['lat'] as num?)?.toDouble() ?? 0.0,
@@ -75,6 +55,29 @@ class FoodDonationEntity {
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
+  final String id;
+  final String donorId;
+  final String donorName;
+  final String donorPhone;
+  final String title;
+  final String description;
+  final String category; // cooked | raw | packaged | fruits | other
+  final String quantity;
+  final String? imageUrl;
+  final String? imagePublicId;
+  final String status; // available | accepted | collected | delivered | completed | expired
+  final String pickupAddress;
+  final double latitude;
+  final double longitude;
+  final String geohash;
+  final DateTime expiresAt;
+  final String? acceptedBy;
+  final String? acceptedByName;
+  final DateTime? acceptedAt;
+  final DateTime? collectedAt;
+  final DateTime? deliveredAt;
+  final DateTime? completedAt;
+  final DateTime createdAt;
 
   Map<String, dynamic> toMap() {
     return {
@@ -87,6 +90,7 @@ class FoodDonationEntity {
       'category': category,
       'quantity': quantity,
       'imageUrl': imageUrl,
+      'imagePublicId': imagePublicId,
       'status': status,
       'pickupLocation': {
         'address': pickupAddress,
@@ -115,6 +119,7 @@ class FoodDonationEntity {
     String? category,
     String? quantity,
     String? imageUrl,
+    String? imagePublicId,
     String? status,
     String? pickupAddress,
     double? latitude,
@@ -139,6 +144,7 @@ class FoodDonationEntity {
       category: category ?? this.category,
       quantity: quantity ?? this.quantity,
       imageUrl: imageUrl ?? this.imageUrl,
+      imagePublicId: imagePublicId ?? this.imagePublicId,
       status: status ?? this.status,
       pickupAddress: pickupAddress ?? this.pickupAddress,
       latitude: latitude ?? this.latitude,

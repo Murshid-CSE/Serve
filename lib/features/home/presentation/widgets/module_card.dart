@@ -2,12 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:community_care_hub/core/widgets/app_card.dart';
 
 class ModuleCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final List<Color> gradient;
-  final VoidCallback onTap;
-  final int? badgeCount;
 
   const ModuleCard({
     super.key,
@@ -18,6 +12,12 @@ class ModuleCard extends StatelessWidget {
     required this.onTap,
     this.badgeCount,
   });
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final List<Color> gradient;
+  final VoidCallback onTap;
+  final int? badgeCount;
 
   @override
   Widget build(BuildContext context) {

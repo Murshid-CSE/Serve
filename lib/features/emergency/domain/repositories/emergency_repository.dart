@@ -1,7 +1,7 @@
 import 'package:community_care_hub/features/emergency/domain/entities/emergency_alert_entity.dart';
 
 abstract class EmergencyRepository {
-  Future<List<EmergencyAlertEntity>> getNearbyEmergencyAlerts({
+  Stream<List<EmergencyAlertEntity>> getNearbyEmergencyAlerts({
     required double latitude,
     required double longitude,
     required double radiusKm,
@@ -21,4 +21,8 @@ abstract class EmergencyRepository {
     required double longitude,
     required String contactPhone,
   });
+
+  Stream<List<EmergencyAlertEntity>> getUserAlerts(String userId);
+
+  Stream<List<EmergencyAlertEntity>> getUserResponses(String userId);
 }

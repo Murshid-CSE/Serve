@@ -187,8 +187,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     padding: const EdgeInsets.all(24.0),
                     child: Form(
                       key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 12),
                           AuthFormField(
@@ -235,8 +236,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             variant: AppButtonVariant.filled,
                           ),
                           const SizedBox(height: 20),
-                          Row(
-                            children: const [
+                          const Row(
+                            children: [
                               Expanded(
                                 child: Divider(color: AppColors.neutral300),
                               ),
@@ -245,7 +246,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 child: Text(
                                   'OR',
                                   style: TextStyle(
-                                    color: AppColors.neutral500,
+                                    color: AppColors.neutral600,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -260,7 +261,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             onPressed: _isGoogleLoading ? () {} : _handleGoogleSignIn,
                             isLoading: _isGoogleLoading,
                           ),
-                          const Spacer(),
+                          const SizedBox(height: 24),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -283,6 +284,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ],
                           ),
                         ],
+                      ),
                       ),
                     ),
                   ),

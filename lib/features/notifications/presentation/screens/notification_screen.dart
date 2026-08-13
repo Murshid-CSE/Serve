@@ -92,7 +92,7 @@ class NotificationScreen extends ConsumerWidget {
                         }
                         // 2. Redirect route if exists
                         if (context.mounted && notification.route != null) {
-                          context.push(notification.route!);
+                          await context.push(notification.route!);
                         }
                       },
                       leading: CircleAvatar(

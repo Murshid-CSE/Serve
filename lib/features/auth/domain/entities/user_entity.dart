@@ -1,26 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserEntity {
-  final String uid;
-  final String name;
-  final String email;
-  final String phone;
-  final String? photoUrl;
-  final String role; // donor, volunteer, both, admin
-  final String? bloodGroup;
-  final bool isBloodDonorActive;
-  final DateTime? lastBloodDonationDate;
-  final double latitude;
-  final double longitude;
-  final String geohash;
-  final double impactScore;
-  final double reliabilityScore;
-  final int totalFoodDonations;
-  final int totalBloodDonations;
-  final int totalVolunteerTasks;
-  final String? fcmToken;
-  final DateTime createdAt;
-  final DateTime updatedAt;
 
   const UserEntity({
     required this.uid,
@@ -28,6 +8,7 @@ class UserEntity {
     required this.email,
     required this.phone,
     this.photoUrl,
+    this.imagePublicId,
     required this.role,
     this.bloodGroup,
     this.isBloodDonorActive = false,
@@ -52,6 +33,7 @@ class UserEntity {
       email: map['email'] as String? ?? '',
       phone: map['phone'] as String? ?? '',
       photoUrl: map['photoUrl'] as String?,
+      imagePublicId: map['imagePublicId'] as String?,
       role: map['role'] as String? ?? 'donor',
       bloodGroup: map['bloodGroup'] as String?,
       isBloodDonorActive: map['isBloodDonorActive'] as bool? ?? false,
@@ -69,6 +51,27 @@ class UserEntity {
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
+  final String uid;
+  final String name;
+  final String email;
+  final String phone;
+  final String? photoUrl;
+  final String? imagePublicId;
+  final String role; // donor, volunteer, both, admin
+  final String? bloodGroup;
+  final bool isBloodDonorActive;
+  final DateTime? lastBloodDonationDate;
+  final double latitude;
+  final double longitude;
+  final String geohash;
+  final double impactScore;
+  final double reliabilityScore;
+  final int totalFoodDonations;
+  final int totalBloodDonations;
+  final int totalVolunteerTasks;
+  final String? fcmToken;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   Map<String, dynamic> toMap() {
     return {
@@ -77,6 +80,7 @@ class UserEntity {
       'email': email,
       'phone': phone,
       'photoUrl': photoUrl,
+      'imagePublicId': imagePublicId,
       'role': role,
       'bloodGroup': bloodGroup,
       'isBloodDonorActive': isBloodDonorActive,
@@ -105,6 +109,7 @@ class UserEntity {
     String? email,
     String? phone,
     String? photoUrl,
+    String? imagePublicId,
     String? role,
     String? bloodGroup,
     bool? isBloodDonorActive,
@@ -127,6 +132,7 @@ class UserEntity {
       email: email ?? this.email,
       phone: phone ?? this.phone,
       photoUrl: photoUrl ?? this.photoUrl,
+      imagePublicId: imagePublicId ?? this.imagePublicId,
       role: role ?? this.role,
       bloodGroup: bloodGroup ?? this.bloodGroup,
       isBloodDonorActive: isBloodDonorActive ?? this.isBloodDonorActive,

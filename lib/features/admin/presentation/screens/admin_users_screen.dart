@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:community_care_hub/features/auth/domain/entities/user_entity.dart';
 import 'package:community_care_hub/core/widgets/loading_shimmer.dart';
 import 'package:community_care_hub/core/widgets/error_state.dart';
@@ -162,15 +163,15 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
 }
 
 class _UserTile extends StatelessWidget {
-  final UserEntity user;
-  final ValueChanged<String> onChangeRole;
-  final VoidCallback onDelete;
 
   const _UserTile({
     required this.user,
     required this.onChangeRole,
     required this.onDelete,
   });
+  final UserEntity user;
+  final ValueChanged<String> onChangeRole;
+  final VoidCallback onDelete;
 
   Color _roleColor(String role) {
     switch (role) {
@@ -191,7 +192,7 @@ class _UserTile extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
           backgroundColor: AppColors.primarySurface,
-          backgroundImage: user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
+          backgroundImage: user.photoUrl != null ? CachedNetworkImageProvider(user.photoUrl!) : null,
           child: user.photoUrl == null
               ? Text(user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
                   style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary))
@@ -240,7 +241,7 @@ class _UserTile extends StatelessWidget {
             const PopupMenuItem(value: 'both', child: Text('Set as Both')),
             const PopupMenuItem(value: 'admin', child: Text('Set as Admin')),
             const PopupMenuDivider(),
-            PopupMenuItem(
+            const PopupMenuItem(
               value: 'delete',
               child: Text('Delete User', style: TextStyle(color: AppColors.emergency)),
             ),

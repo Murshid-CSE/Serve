@@ -80,7 +80,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError('Web platform is not supported.');
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -102,6 +102,15 @@ class DefaultFirebaseOptions {
   // ║  REPLACE ALL VALUES BELOW WITH YOUR ACTUAL FIREBASE CONFIG     ║
   // ║  Run: flutterfire configure --project=YOUR_PROJECT_ID          ║
   // ╚══════════════════════════════════════════════════════════════════╝
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyBJBSdlHmOJj2b1iNDqaE7moPpQDNLcrDs',
+    appId: '1:304339338811:web:d02b1f8efcd5766c2fbe1e',
+    messagingSenderId: '304339338811',
+    projectId: 'community-care-hub',
+    authDomain: 'community-care-hub.firebaseapp.com',
+    storageBucket: 'community-care-hub.firebasestorage.app',
+  );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBJBSdlHmOJj2b1iNDqaE7moPpQDNLcrDs',

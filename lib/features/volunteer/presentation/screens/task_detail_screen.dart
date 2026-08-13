@@ -11,12 +11,12 @@ import 'package:community_care_hub/core/extensions/datetime_extension.dart';
 import 'package:community_care_hub/core/constants/app_colors.dart';
 
 class TaskDetailScreen extends ConsumerStatefulWidget {
-  final String taskId;
 
   const TaskDetailScreen({
     super.key,
     required this.taskId,
   });
+  final String taskId;
 
   @override
   ConsumerState<TaskDetailScreen> createState() => _TaskDetailScreenState();

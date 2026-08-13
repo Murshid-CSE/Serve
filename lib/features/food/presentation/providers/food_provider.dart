@@ -48,42 +48,42 @@ final foodSearchRadiusProvider = StateProvider<double>((ref) => 5.0);
 final foodCategoryFilterProvider = StateProvider<String?>((ref) => null);
 
 // Nearby Food Donations Provider
-final nearbyFoodDonationsProvider = FutureProvider<List<FoodDonationEntity>>((ref) async {
+final nearbyFoodDonationsProvider = StreamProvider.autoDispose<List<FoodDonationEntity>>((ref) {
   final userAsync = ref.watch(currentUserProvider);
   final radius = ref.watch(foodSearchRadiusProvider);
   final categoryFilter = ref.watch(foodCategoryFilterProvider);
 
   final user = userAsync.value;
   if (user == null || !user.hasLocation) {
-    return [];
+    return Stream.value([]);
   }
 
-  final list = await ref.read(getNearbyFoodUseCaseProvider).call(
+  return ref.watch(getNearbyFoodUseCaseProvider).call(
         latitude: user.latitude,
         longitude: user.longitude,
         radiusKm: radius,
-      );
-
-  if (categoryFilter != null) {
-    return list.where((item) => item.category == categoryFilter).toList();
-  }
-  return list;
+      ).map((list) {
+        if (categoryFilter != null) {
+          return list.where((item) => item.category == categoryFilter).toList();
+        }
+        return list;
+      });
 });
 
 // User's own donations provider
-final userDonationsProvider = FutureProvider<List<FoodDonationEntity>>((ref) async {
+final userDonationsProvider = StreamProvider.autoDispose<List<FoodDonationEntity>>((ref) {
   final userAsync = ref.watch(currentUserProvider);
   final user = userAsync.value;
-  if (user == null) return [];
+  if (user == null) return Stream.value([]);
   
   return ref.watch(foodRepositoryProvider).getUserDonations(user.uid);
 });
 
 // User's accepted delivery tasks provider
-final userAcceptedFoodTasksProvider = FutureProvider<List<FoodDonationEntity>>((ref) async {
+final userAcceptedFoodTasksProvider = StreamProvider.autoDispose<List<FoodDonationEntity>>((ref) {
   final userAsync = ref.watch(currentUserProvider);
   final user = userAsync.value;
-  if (user == null) return [];
+  if (user == null) return Stream.value([]);
   
   return ref.watch(foodRepositoryProvider).getAcceptedTasks(user.uid);
 });

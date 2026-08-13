@@ -66,7 +66,7 @@ class VolunteerHistoryScreen extends ConsumerWidget {
                       task: task,
                       distanceKm: dist,
                       onTap: () {
-                        context.push('/volunteer/${task.id}');
+                        context.push('/volunteer/task/${task.id}');
                       },
                     );
                   },

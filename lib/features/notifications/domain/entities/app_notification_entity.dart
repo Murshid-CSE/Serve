@@ -1,12 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AppNotificationEntity {
-  final String id;
-  final String title;
-  final String body;
-  final String? route; // Navigation redirect route e.g. /food/donation_123
-  final bool read;
-  final DateTime createdAt;
 
   const AppNotificationEntity({
     required this.id,
@@ -27,6 +21,12 @@ class AppNotificationEntity {
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
+  final String id;
+  final String title;
+  final String body;
+  final String? route; // Navigation redirect route e.g. /food/donation_123
+  final bool read;
+  final DateTime createdAt;
 
   Map<String, dynamic> toMap() {
     return {

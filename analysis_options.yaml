@@ -1,1 +1,35 @@
 include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    - always_declare_return_types
+    - cancel_subscriptions
+    - close_sinks
+    - control_flow_in_finally
+    - empty_statements
+    - no_duplicate_case_values
+    - prefer_single_quotes
+    - unawaited_futures
+    - use_build_context_synchronously
+    - avoid_print
+    - avoid_empty_else
+    - throw_in_finally
+    - always_use_package_imports
+    - avoid_relative_lib_imports
+    - prefer_const_constructors
+    - prefer_const_declarations
+    - prefer_const_literals_to_create_immutables
+    - prefer_final_fields
+    - prefer_final_in_for_each
+    - prefer_final_locals
+    - sort_pub_dependencies
+    - sort_constructors_first
+    - sort_unnamed_constructors_first
+
+analyzer:
+  errors:
+    unused_element: error
+    unused_field: error
+    unused_import: error
+    unused_local_variable: error
+    dead_code: error

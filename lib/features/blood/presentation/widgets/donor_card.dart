@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:community_care_hub/features/blood/domain/entities/blood_donor_entity.dart';
 import 'package:community_care_hub/core/widgets/app_card.dart';
 import 'package:community_care_hub/core/constants/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DonorCard extends StatelessWidget {
-  final BloodDonorEntity donor;
-  final double? distanceKm;
 
   const DonorCard({
     super.key,
     required this.donor,
     this.distanceKm,
   });
+  final BloodDonorEntity donor;
+  final double? distanceKm;
 
   Future<void> _makeCall(BuildContext context) async {
     final Uri url = Uri.parse('tel:${donor.phone}');
@@ -41,7 +42,7 @@ class DonorCard extends StatelessWidget {
             CircleAvatar(
               radius: 24,
               backgroundColor: AppColors.primarySurface,
-              backgroundImage: donor.photoUrl != null ? NetworkImage(donor.photoUrl!) : null,
+              backgroundImage: donor.photoUrl != null ? CachedNetworkImageProvider(donor.photoUrl!) : null,
               child: donor.photoUrl == null
                   ? Text(
                       donor.name.isNotEmpty ? donor.name[0].toUpperCase() : 'D',

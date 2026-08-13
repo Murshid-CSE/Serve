@@ -7,9 +7,6 @@ import 'package:community_care_hub/core/constants/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class FoodCard extends StatelessWidget {
-  final FoodDonationEntity donation;
-  final VoidCallback onTap;
-  final double? distanceKm;
 
   const FoodCard({
     super.key,
@@ -17,6 +14,9 @@ class FoodCard extends StatelessWidget {
     required this.onTap,
     this.distanceKm,
   });
+  final FoodDonationEntity donation;
+  final VoidCallback onTap;
+  final double? distanceKm;
 
   @override
   Widget build(BuildContext context) {

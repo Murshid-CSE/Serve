@@ -281,10 +281,10 @@ class _CreateVolunteerTaskScreenState extends ConsumerState<CreateVolunteerTaskS
 
               // Location status
               if (_latitude != null && _longitude != null)
-                Row(
+                const Row(
                   children: [
                     Icon(Icons.gps_fixed_rounded, size: 14, color: AppColors.success),
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6),
                     Text('GPS captured', style: TextStyle(fontSize: 12, color: AppColors.success)),
                   ],
                 ),

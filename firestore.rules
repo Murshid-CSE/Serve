@@ -20,7 +20,8 @@ service cloud.firestore {
       return request.resource.data.keys().hasAll(['uid', 'name', 'email', 'role']) &&
              request.resource.data.name is string &&
              request.resource.data.name.size() > 0 &&
-             request.resource.data.name.size() <= 100;
+             request.resource.data.name.size() <= 100 &&
+             request.resource.data.role in ['donor', 'volunteer', 'ngo', 'recipient', 'hospital'];
     }
     
     // Users
@@ -28,8 +29,7 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create: if isOwner(userId) && validUser();
       allow update: if isOwner(userId) && 
-        !request.resource.data.diff(resource.data).affectedKeys()
-          .hasAny(['impactScore', 'reliabilityScore', 'role']);
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['impactScore', 'reliabilityScore', 'role']);
       allow update: if isAdmin();
       allow delete: if isAdmin();
       
@@ -49,10 +49,14 @@ service cloud.firestore {
         request.resource.data.donorId == request.auth.uid &&
         request.resource.data.status == 'available';
       allow update: if isSignedIn() && (
-        resource.data.donorId == request.auth.uid ||
+        (resource.data.donorId == request.auth.uid && 
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['acceptedBy', 'acceptedByName', 'acceptedAt'])) ||
         (resource.data.status == 'available' && 
-         request.resource.data.acceptedBy == request.auth.uid) ||
-        resource.data.acceptedBy == request.auth.uid ||
+         request.resource.data.status == 'accepted' &&
+         request.resource.data.acceptedBy == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'acceptedBy', 'acceptedByName', 'acceptedAt', 'updatedAt'])) ||
+        (resource.data.acceptedBy == request.auth.uid && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'collectedAt', 'deliveredAt', 'completedAt'])) ||
         isAdmin()
       );
       allow delete: if isAdmin();
@@ -64,7 +68,9 @@ service cloud.firestore {
       allow create: if isSignedIn() && 
         request.resource.data.requesterId == request.auth.uid;
       allow update: if isSignedIn() && (
-        resource.data.requesterId == request.auth.uid ||
+        (resource.data.requesterId == request.auth.uid &&
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['respondedBy', 'respondedByName'])) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['respondedBy', 'status', 'updatedAt'])) ||
         isAdmin()
       );
       allow delete: if isAdmin();
@@ -73,23 +79,38 @@ service cloud.firestore {
     // Volunteer Tasks
     match /volunteer_tasks/{taskId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn();
+      allow create: if isSignedIn() && 
+        request.resource.data.creatorId == request.auth.uid &&
+        request.resource.data.volunteersJoined.size() == 0;
       allow update: if isSignedIn() && (
-        resource.data.assignedTo == request.auth.uid ||
-        resource.data.assignedTo == null ||
+        (resource.data.creatorId == request.auth.uid && 
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['creatorId', 'volunteersJoined'])) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['volunteersJoined']) &&
+         (
+           // Joining
+           (request.resource.data.volunteersJoined.hasAll(resource.data.volunteersJoined) &&
+            request.resource.data.volunteersJoined.hasAll([request.auth.uid]) &&
+            request.resource.data.volunteersJoined.size() == resource.data.volunteersJoined.size() + 1 &&
+            resource.data.volunteersJoined.size() < resource.data.volunteersNeeded) ||
+           // Leaving
+           (resource.data.volunteersJoined.hasAll(request.resource.data.volunteersJoined) &&
+            resource.data.volunteersJoined.hasAll([request.auth.uid]) &&
+            request.resource.data.volunteersJoined.size() == resource.data.volunteersJoined.size() - 1)
+         )) ||
         isAdmin()
       );
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.creatorId == request.auth.uid);
     }
     
     // Emergency Requests
     match /emergency_requests/{emergencyId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn() && 
-        request.resource.data.requesterId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
       allow update: if isSignedIn() && (
-        resource.data.requesterId == request.auth.uid ||
-        request.auth.uid in resource.data.responders ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['responders']) &&
+         request.resource.data.responders.hasAll(resource.data.responders) &&
+         request.resource.data.responders.hasAll([request.auth.uid]) &&
+         request.resource.data.responders.size() == resource.data.responders.size() + 1) ||
         isAdmin()
       );
       allow delete: if isAdmin();

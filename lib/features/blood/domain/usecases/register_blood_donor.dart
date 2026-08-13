@@ -1,9 +1,9 @@
 import 'package:community_care_hub/features/blood/domain/repositories/blood_repository.dart';
 
 class RegisterBloodDonor {
-  final BloodRepository _repository;
 
   const RegisterBloodDonor(this._repository);
+  final BloodRepository _repository;
 
   Future<void> call({
     required String bloodGroup,

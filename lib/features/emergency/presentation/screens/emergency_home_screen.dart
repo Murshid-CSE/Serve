@@ -15,6 +15,64 @@ import 'package:url_launcher/url_launcher.dart';
 class EmergencyHomeScreen extends ConsumerWidget {
   const EmergencyHomeScreen({super.key});
 
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: AppColors.emergency,
+              primaryContainer: AppColors.emergencySurface,
+              onPrimaryContainer: AppColors.emergencyDark,
+            ),
+      ),
+      child: DefaultTabController(
+        length: 3,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Emergency Response', style: TextStyle(fontWeight: FontWeight.bold)),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded),
+              onPressed: () => context.go(AppRoutes.home),
+            ),
+            bottom: const TabBar(
+              indicatorColor: AppColors.emergency,
+              labelColor: AppColors.emergencyDark,
+              unselectedLabelColor: AppColors.neutral500,
+              labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              unselectedLabelStyle: TextStyle(fontWeight: FontWeight.normal, fontSize: 13),
+              tabs: [
+                Tab(icon: Icon(Icons.radar_rounded, size: 20), text: 'Nearby'),
+                Tab(icon: Icon(Icons.campaign_rounded, size: 20), text: 'My Alerts'),
+                Tab(icon: Icon(Icons.medical_services_rounded, size: 20), text: 'My Responses'),
+              ],
+            ),
+          ),
+          body: const TabBarView(
+            children: [
+              _NearbyTab(),
+              _MyAlertsTab(),
+              _MyResponsesTab(),
+            ],
+          ),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () => context.push(AppRoutes.createEmergency),
+            backgroundColor: AppColors.emergency,
+            foregroundColor: Colors.white,
+            icon: const Icon(Icons.add_alert_rounded),
+            label: const Text('Report Emergency', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Tab 1: Nearby — Active incidents around user
+// ─────────────────────────────────────────────
+class _NearbyTab extends ConsumerWidget {
+  const _NearbyTab();
+
   Future<void> _callEmergencyHotline(BuildContext context) async {
     final Uri url = Uri.parse('tel:112'); // National emergency number India
     if (await canLaunchUrl(url)) {
@@ -33,171 +91,278 @@ class EmergencyHomeScreen extends ConsumerWidget {
     final alertsAsync = ref.watch(nearbyEmergencyAlertsProvider);
     final userAsync = ref.watch(currentUserProvider);
 
-    return Theme(
-      data: Theme.of(context).copyWith(
-        colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: AppColors.emergency,
-              primaryContainer: AppColors.emergencySurface,
-              onPrimaryContainer: AppColors.emergencyDark,
-            ),
-      ),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Emergency Response', style: TextStyle(fontWeight: FontWeight.bold)),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            onPressed: () => context.go(AppRoutes.home),
-          ),
-        ),
-        body: userAsync.when(
-          data: (user) {
-            if (user == null) {
-              return const Center(child: Text('User session missing.'));
-            }
+    return userAsync.when(
+      data: (user) {
+        if (user == null) {
+          return const Center(child: Text('User session missing.'));
+        }
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Urgent Emergency Broadcast Dial Banner
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: AppColors.emergency,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.emergency.withValues(alpha: 0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Urgent Emergency Broadcast Dial Banner
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.emergency,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.emergency.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
                       children: [
-                        Row(
-                          children: const [
-                            Icon(Icons.warning_rounded, color: Colors.white, size: 28),
-                            SizedBox(width: 10),
-                            Text(
-                              'Emergency Hotline',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'If you are in immediate danger or need urgent medical/rescue assistance, dial emergency response services now.',
+                        Icon(Icons.warning_rounded, color: Colors.white, size: 28),
+                        SizedBox(width: 10),
+                        Text(
+                          'Emergency Hotline',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 13,
-                            height: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        ElevatedButton.icon(
-                          onPressed: () => _callEmergencyHotline(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: AppColors.emergencyDark,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          icon: const Icon(Icons.phone_in_talk_rounded),
-                          label: const Text(
-                            'Call SOS Services (112)',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ),
-
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Text(
-                    'Active Incidents Nearby',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.neutral900,
+                    const SizedBox(height: 10),
+                    const Text(
+                      'If you are in immediate danger or need urgent medical/rescue assistance, dial emergency response services now.',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 18),
+                    ElevatedButton.icon(
+                      onPressed: () => _callEmergencyHotline(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: AppColors.emergencyDark,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      icon: const Icon(Icons.phone_in_talk_rounded),
+                      label: const Text(
+                        'Call SOS Services (112)',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+            ),
 
-                // Alerts list
-                Expanded(
-                  child: alertsAsync.when(
-                    data: (alerts) {
-                      if (alerts.isEmpty) {
-                        return const EmptyState(
-                          icon: Icons.shield_rounded,
-                          title: 'All Clear',
-                          subtitle: 'There are no active emergency alerts listed in your immediate range.',
-                        );
-                      }
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'Active Incidents Nearby',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.neutral900,
+                ),
+              ),
+            ),
 
-                      return RefreshIndicator(
-                        onRefresh: () async {
-                          ref.invalidate(nearbyEmergencyAlertsProvider);
-                        },
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: alerts.length,
-                          itemBuilder: (context, index) {
-                            final alert = alerts[index];
-                            double? dist;
-                            if (user.hasLocation) {
-                              dist = GeoUtils.calculateDistance(
-                                user.latitude,
-                                user.longitude,
-                                alert.latitude,
-                                alert.longitude,
-                              );
-                            }
+            // Alerts list
+            Expanded(
+              child: alertsAsync.when(
+                data: (alerts) {
+                  if (alerts.isEmpty) {
+                    return const EmptyState(
+                      icon: Icons.shield_rounded,
+                      title: 'All Clear',
+                      subtitle: 'There are no active emergency alerts listed in your immediate range.',
+                    );
+                  }
 
-                            return EmergencyCard(
-                              alert: alert,
-                              distanceKm: dist,
-                              onTap: () {
-                                context.push('/emergency/${alert.id}');
-                              },
-                            );
-                          },
-                        ),
-                      );
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      ref.invalidate(nearbyEmergencyAlertsProvider);
                     },
-                    loading: () => const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: LoadingShimmer.list(count: 3),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: alerts.length,
+                      itemBuilder: (context, index) {
+                        final alert = alerts[index];
+                        double? dist;
+                        if (user.hasLocation) {
+                          dist = GeoUtils.calculateDistance(
+                            user.latitude,
+                            user.longitude,
+                            alert.latitude,
+                            alert.longitude,
+                          );
+                        }
+
+                        return EmergencyCard(
+                          alert: alert,
+                          distanceKm: dist,
+                          onTap: () {
+                            context.push('/emergency/${alert.id}');
+                          },
+                        );
+                      },
                     ),
-                    error: (err, stack) => ErrorState(
-                      message: err.toString(),
-                      onRetry: () => ref.invalidate(nearbyEmergencyAlertsProvider),
-                    ),
-                  ),
+                  );
+                },
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: LoadingShimmer.list(count: 3),
                 ),
-              ],
-            );
+                error: (err, stack) => ErrorState(
+                  message: err.toString(),
+                  onRetry: () => ref.invalidate(nearbyEmergencyAlertsProvider),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, stack) => ErrorState(message: err.toString()),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Tab 2: My Alerts — Alerts I have created
+// ─────────────────────────────────────────────
+class _MyAlertsTab extends ConsumerWidget {
+  const _MyAlertsTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userAlertsAsync = ref.watch(userEmergencyAlertsProvider);
+    final userAsync = ref.watch(currentUserProvider);
+
+    return userAlertsAsync.when(
+      data: (alerts) {
+        if (alerts.isEmpty) {
+          return EmptyState(
+            icon: Icons.campaign_rounded,
+            title: 'No Active Alerts',
+            subtitle: 'Any emergency alerts you create will appear here.',
+            actionLabel: 'Report Emergency',
+            onAction: () => context.push(AppRoutes.createEmergency),
+          );
+        }
+
+        final user = userAsync.value;
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(userEmergencyAlertsProvider);
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => ErrorState(message: err.toString()),
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => context.push(AppRoutes.createEmergency),
-          backgroundColor: AppColors.emergency,
-          foregroundColor: Colors.white,
-          icon: const Icon(Icons.add_alert_rounded),
-          label: const Text('Report Emergency', style: TextStyle(fontWeight: FontWeight.bold)),
-        ),
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: alerts.length,
+            itemBuilder: (context, index) {
+              final alert = alerts[index];
+              double? dist;
+              if (user != null && user.hasLocation) {
+                dist = GeoUtils.calculateDistance(
+                  user.latitude,
+                  user.longitude,
+                  alert.latitude,
+                  alert.longitude,
+                );
+              }
+
+              return EmergencyCard(
+                alert: alert,
+                distanceKm: dist,
+                onTap: () {
+                  context.push('/emergency/${alert.id}');
+                },
+              );
+            },
+          ),
+        );
+      },
+      loading: () => const Padding(
+        padding: EdgeInsets.all(16),
+        child: LoadingShimmer.list(count: 3),
+      ),
+      error: (err, stack) => ErrorState(
+        message: err.toString(),
+        onRetry: () => ref.invalidate(userEmergencyAlertsProvider),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Tab 3: My Responses — Alerts I am responding to
+// ─────────────────────────────────────────────
+class _MyResponsesTab extends ConsumerWidget {
+  const _MyResponsesTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userResponsesAsync = ref.watch(userEmergencyResponsesProvider);
+    final userAsync = ref.watch(currentUserProvider);
+
+    return userResponsesAsync.when(
+      data: (alerts) {
+        if (alerts.isEmpty) {
+          return const EmptyState(
+            icon: Icons.medical_services_rounded,
+            title: 'No Active Responses',
+            subtitle: 'When you respond to an emergency, it will be tracked here.',
+          );
+        }
+
+        final user = userAsync.value;
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(userEmergencyResponsesProvider);
+          },
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: alerts.length,
+            itemBuilder: (context, index) {
+              final alert = alerts[index];
+              double? dist;
+              if (user != null && user.hasLocation) {
+                dist = GeoUtils.calculateDistance(
+                  user.latitude,
+                  user.longitude,
+                  alert.latitude,
+                  alert.longitude,
+                );
+              }
+
+              return EmergencyCard(
+                alert: alert,
+                distanceKm: dist,
+                onTap: () {
+                  context.push('/emergency/${alert.id}');
+                },
+              );
+            },
+          ),
+        );
+      },
+      loading: () => const Padding(
+        padding: EdgeInsets.all(16),
+        child: LoadingShimmer.list(count: 3),
+      ),
+      error: (err, stack) => ErrorState(
+        message: err.toString(),
+        onRetry: () => ref.invalidate(userEmergencyResponsesProvider),
       ),
     );
   }

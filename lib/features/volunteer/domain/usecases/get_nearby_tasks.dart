@@ -2,11 +2,11 @@ import 'package:community_care_hub/features/volunteer/domain/entities/volunteer_
 import 'package:community_care_hub/features/volunteer/domain/repositories/volunteer_repository.dart';
 
 class GetNearbyTasks {
-  final VolunteerRepository _repository;
 
   const GetNearbyTasks(this._repository);
+  final VolunteerRepository _repository;
 
-  Future<List<VolunteerTaskEntity>> call({
+  Stream<List<VolunteerTaskEntity>> call({
     required double latitude,
     required double longitude,
     required double radiusKm,

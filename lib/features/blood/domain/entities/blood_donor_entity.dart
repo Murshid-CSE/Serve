@@ -1,18 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class BloodDonorEntity {
-  final String uid;
-  final String name;
-  final String email;
-  final String phone;
-  final String? photoUrl;
-  final String bloodGroup;
-  final bool isAvailable;
-  final DateTime? lastDonationDate;
-  final double latitude;
-  final double longitude;
-  final String geohash;
-  final double impactScore;
 
   const BloodDonorEntity({
     required this.uid,
@@ -45,6 +33,18 @@ class BloodDonorEntity {
       impactScore: (map['impactScore'] as num?)?.toDouble() ?? 0.0,
     );
   }
+  final String uid;
+  final String name;
+  final String email;
+  final String phone;
+  final String? photoUrl;
+  final String bloodGroup;
+  final bool isAvailable;
+  final DateTime? lastDonationDate;
+  final double latitude;
+  final double longitude;
+  final String geohash;
+  final double impactScore;
 
   Map<String, dynamic> toMap() {
     return {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:community_care_hub/features/auth/presentation/providers/auth_provider.dart';
 import 'package:community_care_hub/core/widgets/app_button.dart';
 import 'package:community_care_hub/core/widgets/app_text_field.dart';
@@ -28,6 +29,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   String? _selectedBloodGroup;
   String? _photoUrl;
+  String? _imagePublicId;
   bool _isLoading = false;
   bool _isUploadingImage = false;
   bool _hasChanges = false;
@@ -47,6 +49,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _phoneController.text = user.phone;
       _selectedBloodGroup = user.bloodGroup;
       _photoUrl = user.photoUrl;
+      _imagePublicId = user.imagePublicId;
     }
   }
 
@@ -98,13 +101,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       final user = ref.read(currentUserProvider).valueOrNull;
       if (user == null) return;
 
-      final downloadUrl = await ImageUtils.uploadImage(
+      final uploadResult = await ImageUtils.uploadImage(
         filePath: pickedFile.path,
         storagePath: '${FirebaseConstants.profileImagesPath}/${user.uid}.jpg',
       );
 
       setState(() {
-        _photoUrl = downloadUrl;
+        _photoUrl = uploadResult.secureUrl;
+        _imagePublicId = uploadResult.publicId;
         _hasChanges = true;
         _isUploadingImage = false;
       });
@@ -170,6 +174,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
       if (_photoUrl != null && _photoUrl != user.photoUrl) {
         updates['photoUrl'] = _photoUrl;
+        updates['imagePublicId'] = _imagePublicId;
       }
 
       await FirebaseFirestore.instance
@@ -216,7 +221,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   CircleAvatar(
                     radius: 56,
                     backgroundColor: AppColors.primarySurface,
-                    backgroundImage: _photoUrl != null ? NetworkImage(_photoUrl!) : null,
+                    backgroundImage: _photoUrl != null ? CachedNetworkImageProvider(_photoUrl!) : null,
                     child: _isUploadingImage
                         ? const CircularProgressIndicator(strokeWidth: 2)
                         : (_photoUrl == null

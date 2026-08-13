@@ -1,11 +1,12 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:community_care_hub/core/errors/app_exception.dart';
+import 'package:community_care_hub/core/services/cloudinary_service.dart';
+import 'package:community_care_hub/core/models/upload_result.dart';
 
 class ImageUtils {
   ImageUtils._();
@@ -55,9 +56,9 @@ class ImageUtils {
 
   /// Show image source picker dialog
   static Future<File?> showImagePicker(BuildContext context) async {
-    File? result;
-
-    await showModalBottomSheet<void>(
+    // Step 1: Get the user's source selection from the bottom sheet.
+    // The sheet returns an ImageSource or null (if dismissed).
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -98,9 +99,8 @@ class ImageUtils {
                 ),
                 title: const Text('Camera'),
                 subtitle: const Text('Take a new photo'),
-                onTap: () async {
-                  Navigator.of(ctx).pop();
-                  result = await pickFromCamera();
+                onTap: () {
+                  Navigator.of(ctx).pop(ImageSource.camera);
                 },
               ),
               ListTile(
@@ -117,9 +117,8 @@ class ImageUtils {
                 ),
                 title: const Text('Gallery'),
                 subtitle: const Text('Choose from gallery'),
-                onTap: () async {
-                  Navigator.of(ctx).pop();
-                  result = await pickFromGallery();
+                onTap: () {
+                  Navigator.of(ctx).pop(ImageSource.gallery);
                 },
               ),
               const SizedBox(height: 8),
@@ -129,7 +128,17 @@ class ImageUtils {
       ),
     );
 
-    return result;
+    // Step 2: Pick the image AFTER the sheet has fully closed.
+    // This eliminates the race condition where pop() resolved the
+    // showModalBottomSheet future before the picker completed.
+    if (source == null) return null;
+
+    switch (source) {
+      case ImageSource.camera:
+        return pickFromCamera();
+      case ImageSource.gallery:
+        return pickFromGallery();
+    }
   }
 
   /// Compress image to target size (<200KB)
@@ -181,8 +190,8 @@ class ImageUtils {
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
-  /// Upload an image to Firebase Storage and return the download URL
-  static Future<String> uploadImage({
+  /// Upload an image to Cloudinary and return the UploadResult
+  static Future<UploadResult> uploadImage({
     required String filePath,
     required String storagePath,
   }) async {
@@ -198,18 +207,24 @@ class ImageUtils {
       // Compress the image before uploading
       final compressed = await _compressImage(file);
 
-      final ref = FirebaseStorage.instance.ref().child(storagePath);
-      final uploadTask = await ref.putFile(compressed);
-      return await uploadTask.ref.getDownloadURL();
-    } on FirebaseException catch (e) {
-      throw StorageException(
-        message: e.message ?? 'Failed to upload image.',
-        code: e.code,
+      // Map firebase storagePath folder to Cloudinary folder structure
+      String folder = 'community-care-hub/misc';
+      if (storagePath.contains('profile_images')) {
+        folder = 'community-care-hub/profiles';
+      } else if (storagePath.contains('food_images')) {
+        folder = 'community-care-hub/food';
+      }
+
+      final result = await CloudinaryService.uploadImage(
+        file: compressed,
+        folder: folder,
       );
+      return result;
     } catch (e) {
+      if (e is AppException) rethrow;
       throw StorageException(
         message: e.toString(),
-        code: 'unknown-error',
+        code: 'upload-error',
       );
     }
   }

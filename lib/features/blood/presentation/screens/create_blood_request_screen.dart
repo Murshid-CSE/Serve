@@ -260,10 +260,10 @@ class _CreateBloodRequestScreenState extends ConsumerState<CreateBloodRequestScr
                         ),
                       ),
                       const SizedBox(width: 14),
-                      Expanded(
+                      const Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             Text(
                               'Critical Emergency',
                               style: TextStyle(

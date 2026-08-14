@@ -270,11 +270,14 @@ class GeoUtils {
     return lat >= 6.0 && lat <= 37.0 && lng >= 68.0 && lng <= 97.5;
   }
 
-  /// Get the current device position with permission handling
+  /// Get the current device position with permission handling and fallback strategies
   static Future<Position> getCurrentPosition() async {
     final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      throw Exception('Location services are disabled.');
+      // Try last known position before giving up
+      final lastKnown = await Geolocator.getLastKnownPosition();
+      if (lastKnown != null) return lastKnown;
+      throw Exception('Location services are disabled on your device.');
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
@@ -286,12 +289,34 @@ class GeoUtils {
     }
 
     if (permission == LocationPermission.deniedForever) {
-      throw Exception('Location permissions are permanently denied.');
+      throw Exception('Location permissions are permanently denied. Please enable in Settings.');
     }
 
-    return await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
-    );
+    // 1. Try high accuracy with timeout
+    try {
+      return await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 8),
+        ),
+      );
+    } catch (_) {
+      // 2. Fallback to last known position
+      final lastKnown = await Geolocator.getLastKnownPosition();
+      if (lastKnown != null) return lastKnown;
+
+      // 3. Fallback to balanced/medium accuracy
+      try {
+        return await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.medium,
+            timeLimit: Duration(seconds: 5),
+          ),
+        );
+      } catch (e) {
+        throw Exception('Unable to acquire GPS location. Please check signal: $e');
+      }
+    }
   }
 
   /// Reverse-geocode coordinates to a human-readable address

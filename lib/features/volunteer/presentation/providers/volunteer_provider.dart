@@ -37,11 +37,10 @@ final volunteerSearchRadiusProvider = StateProvider<double>((ref) => 10.0);
 // Selected task type filter provider
 final volunteerTypeFilterProvider = StateProvider<String?>((ref) => null);
 
-// Nearby Volunteer Tasks Provider
-final nearbyVolunteerTasksProvider = StreamProvider.autoDispose<List<VolunteerTaskEntity>>((ref) {
+// Raw Nearby Volunteer Tasks Stream (does not restart on task type filter change)
+final _rawNearbyVolunteerTasksProvider = StreamProvider.autoDispose<List<VolunteerTaskEntity>>((ref) {
   final userAsync = ref.watch(currentUserProvider);
   final radius = ref.watch(volunteerSearchRadiusProvider);
-  final typeFilter = ref.watch(volunteerTypeFilterProvider);
 
   final user = userAsync.value;
   if (user == null || !user.hasLocation) {
@@ -52,12 +51,20 @@ final nearbyVolunteerTasksProvider = StreamProvider.autoDispose<List<VolunteerTa
         latitude: user.latitude,
         longitude: user.longitude,
         radiusKm: radius,
-      ).map((list) {
-        if (typeFilter != null) {
-          return list.where((task) => task.type == typeFilter).toList();
-        }
-        return list;
-      });
+      );
+});
+
+// Filtered Nearby Volunteer Tasks Provider (rebuilds only when filter or raw stream changes)
+final nearbyVolunteerTasksProvider = Provider.autoDispose<AsyncValue<List<VolunteerTaskEntity>>>((ref) {
+  final rawData = ref.watch(_rawNearbyVolunteerTasksProvider);
+  final typeFilter = ref.watch(volunteerTypeFilterProvider);
+
+  return rawData.whenData((list) {
+    if (typeFilter != null) {
+      return list.where((task) => task.type == typeFilter).toList();
+    }
+    return list;
+  });
 });
 
 // User's joined tasks list provider

@@ -47,11 +47,10 @@ final foodSearchRadiusProvider = StateProvider<double>((ref) => 5.0);
 // Selected category filter provider
 final foodCategoryFilterProvider = StateProvider<String?>((ref) => null);
 
-// Nearby Food Donations Provider
-final nearbyFoodDonationsProvider = StreamProvider.autoDispose<List<FoodDonationEntity>>((ref) {
+// Raw Nearby Food Donations Stream (does not restart on category filter change)
+final _rawNearbyFoodDonationsProvider = StreamProvider.autoDispose<List<FoodDonationEntity>>((ref) {
   final userAsync = ref.watch(currentUserProvider);
   final radius = ref.watch(foodSearchRadiusProvider);
-  final categoryFilter = ref.watch(foodCategoryFilterProvider);
 
   final user = userAsync.value;
   if (user == null || !user.hasLocation) {
@@ -62,12 +61,20 @@ final nearbyFoodDonationsProvider = StreamProvider.autoDispose<List<FoodDonation
         latitude: user.latitude,
         longitude: user.longitude,
         radiusKm: radius,
-      ).map((list) {
-        if (categoryFilter != null) {
-          return list.where((item) => item.category == categoryFilter).toList();
-        }
-        return list;
-      });
+      );
+});
+
+// Filtered Nearby Food Donations Provider (rebuilds only when filter or raw stream changes)
+final nearbyFoodDonationsProvider = Provider.autoDispose<AsyncValue<List<FoodDonationEntity>>>((ref) {
+  final rawData = ref.watch(_rawNearbyFoodDonationsProvider);
+  final categoryFilter = ref.watch(foodCategoryFilterProvider);
+
+  return rawData.whenData((list) {
+    if (categoryFilter != null) {
+      return list.where((item) => item.category == categoryFilter).toList();
+    }
+    return list;
+  });
 });
 
 // User's own donations provider

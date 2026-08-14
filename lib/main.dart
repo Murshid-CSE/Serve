@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:community_care_hub/firebase_options.dart';
 import 'package:community_care_hub/core/theme/app_theme.dart';
 import 'package:community_care_hub/navigation/app_router.dart';
+import 'package:community_care_hub/core/services/local_notification_service.dart';
 
 /// Background message handler for FCM
 @pragma('vm:entry-point')
@@ -78,6 +79,9 @@ void main() async {
       debugPrint('Emulator connection failed: $e');
     }
   }
+
+  // Initialize local notification service for foreground FCM
+  await LocalNotificationService.instance.initialize();
 
   // Setup FCM background handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);

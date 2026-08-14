@@ -7,6 +7,7 @@ import 'package:community_care_hub/features/auth/presentation/providers/auth_pro
 import 'package:community_care_hub/core/constants/firebase_constants.dart';
 import 'package:community_care_hub/navigation/app_router.dart';
 import 'package:community_care_hub/navigation/app_routes.dart';
+import 'package:community_care_hub/core/services/local_notification_service.dart';
 
 // Firebase Messaging Provider
 final firebaseMessagingProvider = Provider<FirebaseMessaging>((ref) {
@@ -81,9 +82,9 @@ class NotificationManager {
       _updateUserFcmToken(newToken);
     });
 
-    // 1. Foreground message handler
+    // 1. Foreground message handler — show as local notification
     _foregroundSubscription = FirebaseMessaging.onMessage.listen((message) {
-      // Handled automatically or log here if needed
+      LocalNotificationService.instance.showFromFCM(message);
     });
 
     // 2. Handle app opened from background via notification tap

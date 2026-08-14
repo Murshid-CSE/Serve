@@ -53,8 +53,6 @@ class _FoodDetailScreenState extends ConsumerState<FoodDetailScreen> {
 
       if (!mounted) return;
       context.showSuccessSnackBar('Rescue task accepted! Coordination flow started.');
-      ref.invalidate(nearbyFoodDonationsProvider);
-      ref.invalidate(userAcceptedFoodTasksProvider);
     } catch (e) {
       if (!mounted) return;
       context.showErrorSnackBar(e.toString());
@@ -80,9 +78,6 @@ class _FoodDetailScreenState extends ConsumerState<FoodDetailScreen> {
 
       if (!mounted) return;
       context.showSuccessSnackBar(successMsg);
-      ref.invalidate(nearbyFoodDonationsProvider);
-      ref.invalidate(userAcceptedFoodTasksProvider);
-      ref.invalidate(userDonationsProvider);
     } catch (e) {
       if (!mounted) return;
       context.showErrorSnackBar(e.toString());

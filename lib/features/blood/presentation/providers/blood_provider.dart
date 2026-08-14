@@ -48,19 +48,26 @@ final bloodSearchRadiusProvider = StateProvider<double>((ref) => 25.0);
 // Selected blood group filter provider
 final bloodGroupQueryFilterProvider = StateProvider<String?>((ref) => null);
 
-// Active Blood Requests Provider
-final activeBloodRequestsProvider = StreamProvider.autoDispose<List<BloodRequestEntity>>((ref) {
-  final stream = ref.read(bloodRepositoryProvider).getActiveRequests();
+// Active Blood Requests — raw stream (never rebuilds on filter change)
+final _rawActiveBloodRequestsProvider = StreamProvider.autoDispose<List<BloodRequestEntity>>((ref) {
+  return ref.read(bloodRepositoryProvider).getActiveRequests();
+});
+
+// Active Blood Requests — filtered view (rebuilds only the filter, not the stream)
+final activeBloodRequestsProvider = Provider.autoDispose<AsyncValue<List<BloodRequestEntity>>>((ref) {
+  final rawData = ref.watch(_rawActiveBloodRequestsProvider);
   final groupFilter = ref.watch(bloodGroupQueryFilterProvider);
 
-  if (groupFilter != null) {
-    return stream.map((list) => list.where((item) => item.bloodGroup == groupFilter).toList());
-  }
-  return stream;
+  return rawData.whenData((list) {
+    if (groupFilter != null) {
+      return list.where((item) => item.bloodGroup == groupFilter).toList();
+    }
+    return list;
+  });
 });
 
 // Nearby Compatible Donors Provider (for specific blood requests)
-final nearbyCompatibleDonorsProvider = FutureProvider.family<List<BloodDonorEntity>, String>((ref, bloodGroup) async {
+final nearbyCompatibleDonorsProvider = FutureProvider.autoDispose.family<List<BloodDonorEntity>, String>((ref, bloodGroup) async {
   final userAsync = ref.watch(currentUserProvider);
   final radius = ref.watch(bloodSearchRadiusProvider);
 

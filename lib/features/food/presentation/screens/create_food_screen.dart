@@ -130,8 +130,6 @@ class _CreateFoodScreenState extends ConsumerState<CreateFoodScreen> {
 
       if (!mounted) return;
       context.showSuccessSnackBar('Food donation posted successfully! Nearby volunteers notified.');
-      ref.invalidate(nearbyFoodDonationsProvider);
-      ref.invalidate(userDonationsProvider);
       context.pop();
     } catch (e) {
       if (!mounted) return;

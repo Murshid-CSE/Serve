@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:community_care_hub/features/volunteer/domain/entities/volunteer_task_entity.dart';
 import 'package:community_care_hub/core/constants/firebase_constants.dart';
 import 'package:community_care_hub/core/utils/geo_utils.dart';
@@ -7,28 +8,34 @@ import 'package:community_care_hub/core/errors/app_exception.dart';
 class VolunteerRemoteDataSource {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Get nearby volunteer tasks using geohash prefix range (Stream)
+  /// Get nearby volunteer tasks using multi-range geohash neighbor queries (Stream)
   Stream<List<VolunteerTaskEntity>> getNearbyVolunteerTasks({
     required double latitude,
     required double longitude,
     required double radiusKm,
   }) {
     try {
-      final prefix = GeoUtils.getGeohashPrefix(latitude, longitude, radiusKm);
-      final range = GeoUtils.getGeohashRange(prefix);
+      final ranges = GeoUtils.getGeohashQueryRanges(latitude, longitude, radiusKm);
 
-      return _firestore
-          .collection(FirebaseConstants.volunteerTasksCollection)
-          .where('status', isEqualTo: 'active')
-          .where('location.geohash', isGreaterThanOrEqualTo: range[0])
-          .where('location.geohash', isLessThanOrEqualTo: range[1])
-          .snapshots()
-          .map((snapshot) {
-        final list = snapshot.docs
-            .map((doc) => VolunteerTaskEntity.fromMap(doc.data()))
-            .toList();
+      final streams = ranges.map((range) {
+        return _firestore
+            .collection(FirebaseConstants.volunteerTasksCollection)
+            .where('status', isEqualTo: 'active')
+            .where('location.geohash', isGreaterThanOrEqualTo: range[0])
+            .where('location.geohash', isLessThanOrEqualTo: range[1])
+            .snapshots();
+      }).toList();
 
-        // Post-filter by distance and date
+      return CombineLatestStream.list(streams).map((snapshots) {
+        final allDocs = <String, VolunteerTaskEntity>{};
+        for (final snapshot in snapshots) {
+          for (final doc in snapshot.docs) {
+            allDocs[doc.id] = VolunteerTaskEntity.fromMap(doc.data());
+          }
+        }
+        final list = allDocs.values.toList();
+
+        // Post-filter by date and exact distance
         final activeList = list.where((item) => item.date.isAfter(DateTime.now())).toList();
 
         final filtered = GeoUtils.filterByDistance<VolunteerTaskEntity>(

@@ -115,8 +115,6 @@ class _CreateBloodRequestScreenState extends ConsumerState<CreateBloodRequestScr
 
       if (!mounted) return;
       context.showSuccessSnackBar('Blood request broadcasted! Compatible donors notified.');
-      ref.invalidate(activeBloodRequestsProvider);
-      ref.invalidate(userBloodRequestsProvider);
       context.pop();
     } catch (e) {
       if (!mounted) return;

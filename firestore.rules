@@ -68,9 +68,14 @@ service cloud.firestore {
       allow create: if isSignedIn() && 
         request.resource.data.requesterId == request.auth.uid;
       allow update: if isSignedIn() && (
+        // Owner can update their own request (except respondedBy)
         (resource.data.requesterId == request.auth.uid &&
          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['respondedBy', 'respondedByName'])) ||
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['respondedBy', 'status', 'updatedAt'])) ||
+        // Responder can only ADD themselves to respondedBy
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['respondedBy', 'status', 'updatedAt']) &&
+         request.resource.data.respondedBy.hasAll(resource.data.respondedBy) &&
+         request.resource.data.respondedBy.hasAll([request.auth.uid]) &&
+         request.resource.data.respondedBy.size() == resource.data.respondedBy.size() + 1) ||
         isAdmin()
       );
       allow delete: if isAdmin();
@@ -107,7 +112,7 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
       allow update: if isSignedIn() && (
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['responders']) &&
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['responders', 'updatedAt']) &&
          request.resource.data.responders.hasAll(resource.data.responders) &&
          request.resource.data.responders.hasAll([request.auth.uid]) &&
          request.resource.data.responders.size() == resource.data.responders.size() + 1) ||
@@ -116,11 +121,11 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     
-    // Notifications
+    // Notifications (top-level — used only by Cloud Functions)
     match /notifications/{notificationId} {
       allow read: if isSignedIn() && 
         resource.data.userId == request.auth.uid;
-      allow create: if isSignedIn();
+      allow create: if false; // Only Cloud Functions can create notifications
       allow update: if isSignedIn() && 
         resource.data.userId == request.auth.uid;
       allow delete: if isAdmin();

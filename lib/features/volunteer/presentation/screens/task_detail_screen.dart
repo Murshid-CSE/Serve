@@ -38,8 +38,6 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
 
       if (!mounted) return;
       context.showSuccessSnackBar('You have successfully joined this mission. Thank you!');
-      ref.invalidate(nearbyVolunteerTasksProvider);
-      ref.invalidate(userVolunteerTasksProvider);
     } catch (e) {
       if (!mounted) return;
       context.showErrorSnackBar(e.toString());
@@ -74,8 +72,6 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
 
       if (!mounted) return;
       context.showSuccessSnackBar('You have opted out of this volunteer mission.');
-      ref.invalidate(nearbyVolunteerTasksProvider);
-      ref.invalidate(userVolunteerTasksProvider);
     } catch (e) {
       if (!mounted) return;
       context.showErrorSnackBar(e.toString());

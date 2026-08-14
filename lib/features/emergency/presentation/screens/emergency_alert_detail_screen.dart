@@ -46,7 +46,6 @@ class _EmergencyAlertDetailScreenState extends ConsumerState<EmergencyAlertDetai
 
       if (!mounted) return;
       context.showSuccessSnackBar('Thank you for responding! Please coordinate safely.');
-      ref.invalidate(nearbyEmergencyAlertsProvider);
     } catch (e) {
       if (!mounted) return;
       context.showErrorSnackBar(e.toString());

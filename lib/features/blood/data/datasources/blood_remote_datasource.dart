@@ -108,23 +108,24 @@ class BloodRemoteDataSource {
       // 1. Get compatible blood group types for the requested group
       final compatibleGroups = compatibilityMap[requestedBloodGroup] ?? [requestedBloodGroup];
 
-      final prefix = GeoUtils.getGeohashPrefix(latitude, longitude, radiusKm);
-      final range = GeoUtils.getGeohashRange(prefix);
+      final ranges = GeoUtils.getGeohashQueryRanges(latitude, longitude, radiusKm);
 
-      // 2. Fetch active donors from users collection who match geohash range
-      final snapshot = await _firestore
-          .collection(FirebaseConstants.usersCollection)
-          .where('isBloodDonorActive', isEqualTo: true)
-          .where('location.geohash', isGreaterThanOrEqualTo: range[0])
-          .where('location.geohash', isLessThanOrEqualTo: range[1])
-          .get();
-
-      final allDonors = snapshot.docs
-          .map((doc) => BloodDonorEntity.fromMap(doc.data()))
-          .toList();
+      // 2. Fetch active donors from all geohash neighbor ranges
+      final allDocs = <String, BloodDonorEntity>{};
+      for (final range in ranges) {
+        final snapshot = await _firestore
+            .collection(FirebaseConstants.usersCollection)
+            .where('isBloodDonorActive', isEqualTo: true)
+            .where('location.geohash', isGreaterThanOrEqualTo: range[0])
+            .where('location.geohash', isLessThanOrEqualTo: range[1])
+            .get();
+        for (final doc in snapshot.docs) {
+          allDocs[doc.id] = BloodDonorEntity.fromMap(doc.data());
+        }
+      }
 
       // 3. Post-filter compatibility & distance
-      final compatibleDonors = allDonors.where((donor) {
+      final compatibleDonors = allDocs.values.where((donor) {
         return compatibleGroups.contains(donor.bloodGroup);
       }).toList();
 

@@ -87,8 +87,10 @@ class GeoUtils {
     return buffer.toString();
   }
 
-  /// Get geohash prefix for a given radius
-  /// Used for Firestore geospatial queries
+  /// Base32 alphabet used in geohashing
+  static const _base32 = '0123456789bcdefghjkmnpqrstuvwxyz';
+
+  /// Geohash precision for a given search radius
   static int geohashPrecisionForRadius(double radiusKm) {
     if (radiusKm <= 0.153) return 7;
     if (radiusKm <= 1.2) return 6;
@@ -99,25 +101,124 @@ class GeoUtils {
     return 1;
   }
 
-  /// Get geohash neighbors for a given geohash
-  /// Returns list of geohash prefixes to query for nearby results
+  /// Decode a geohash string back to its bounding box
+  /// Returns [minLat, maxLat, minLng, maxLng]
+  static List<double> _decodeGeohashBounds(String geohash) {
+    double minLat = -90.0, maxLat = 90.0;
+    double minLng = -180.0, maxLng = 180.0;
+    bool isEven = true;
+
+    for (int i = 0; i < geohash.length; i++) {
+      final ch = _base32.indexOf(geohash[i]);
+      for (int bit = 4; bit >= 0; bit--) {
+        if (isEven) {
+          final mid = (minLng + maxLng) / 2;
+          if ((ch >> bit) & 1 == 1) {
+            minLng = mid;
+          } else {
+            maxLng = mid;
+          }
+        } else {
+          final mid = (minLat + maxLat) / 2;
+          if ((ch >> bit) & 1 == 1) {
+            minLat = mid;
+          } else {
+            maxLat = mid;
+          }
+        }
+        isEven = !isEven;
+      }
+    }
+    return [minLat, maxLat, minLng, maxLng];
+  }
+
+  /// Get all 8 neighboring geohash cells plus the center cell (9 total)
+  /// Uses coordinate arithmetic: decode center to lat/lng bounds, 
+  /// then step by the cell size in each direction and re-encode
+  static List<String> getGeohashNeighbors(String geohash) {
+    final bounds = _decodeGeohashBounds(geohash);
+    final latStep = bounds[1] - bounds[0]; // cell height
+    final lngStep = bounds[3] - bounds[2]; // cell width
+    final centerLat = (bounds[0] + bounds[1]) / 2;
+    final centerLng = (bounds[2] + bounds[3]) / 2;
+    final precision = geohash.length;
+
+    final neighbors = <String>{};
+    for (int dLat = -1; dLat <= 1; dLat++) {
+      for (int dLng = -1; dLng <= 1; dLng++) {
+        final lat = centerLat + dLat * latStep;
+        final lng = centerLng + dLng * lngStep;
+        // Clamp to valid ranges
+        if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+          neighbors.add(encodeGeohash(lat, lng, precision: precision));
+        }
+      }
+    }
+
+    return neighbors.toList();
+  }
+
+
+
+  /// Get optimized query ranges for nearby geohash queries.
+  /// Returns a list of [lower, upper] pairs for Firestore range queries.
+  /// Merges contiguous ranges to minimize the number of queries.
+  static List<List<String>> getGeohashQueryRanges(double lat, double lng, double radiusKm) {
+    final precision = geohashPrecisionForRadius(radiusKm);
+    final centerGeohash = encodeGeohash(lat, lng, precision: precision);
+    final neighbors = getGeohashNeighbors(centerGeohash);
+
+    // Sort and deduplicate
+    final sorted = neighbors.toSet().toList()..sort();
+
+    // Merge contiguous ranges
+    final List<List<String>> ranges = [];
+    String rangeStart = sorted[0];
+    String rangeEnd = sorted[0];
+
+    for (int i = 1; i < sorted.length; i++) {
+      // Check if this geohash is contiguous with the previous one
+      if (_areContiguous(rangeEnd, sorted[i])) {
+        rangeEnd = sorted[i];
+      } else {
+        ranges.add([rangeStart, '$rangeEnd\uffff']);
+        rangeStart = sorted[i];
+        rangeEnd = sorted[i];
+      }
+    }
+    ranges.add([rangeStart, '$rangeEnd\uffff']);
+
+    return ranges;
+  }
+
+  /// Check if two geohashes are contiguous (differ by 1 in the last character)
+  static bool _areContiguous(String a, String b) {
+    if (a.length != b.length) return false;
+    if (a.substring(0, a.length - 1) != b.substring(0, b.length - 1)) return false;
+    final idxA = _base32.indexOf(a[a.length - 1]);
+    final idxB = _base32.indexOf(b[b.length - 1]);
+    return (idxB - idxA) == 1;
+  }
+
+  /// @deprecated Use getGeohashQueryRanges instead
+  /// Get geohash neighbors for a given geohash (legacy single-range)
   static List<String> getGeohashRange(String geohash) {
     final lastChar = geohash[geohash.length - 1];
     final prefix = geohash.substring(0, geohash.length - 1);
 
-    const base32 = '0123456789bcdefghjkmnpqrstuvwxyz';
-    final index = base32.indexOf(lastChar);
+    final index = _base32.indexOf(lastChar);
 
     final lower = index > 0
-        ? '$prefix${base32[index - 1]}'
+        ? '$prefix${_base32[index - 1]}'
         : geohash;
-    final upper = index < base32.length - 1
-        ? '$prefix${base32[index + 1]}'
+    final upper = index < _base32.length - 1
+        ? '$prefix${_base32[index + 1]}'
         : geohash;
 
     return [lower, upper];
   }
 
+  /// @deprecated Use getGeohashQueryRanges instead
   /// Get geohash prefix for nearby queries based on search radius
   static String getGeohashPrefix(double lat, double lng, double radiusKm) {
     final precision = geohashPrecisionForRadius(radiusKm);

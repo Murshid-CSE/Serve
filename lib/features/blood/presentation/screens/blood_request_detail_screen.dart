@@ -48,7 +48,6 @@ class _BloodRequestDetailScreenState extends ConsumerState<BloodRequestDetailScr
       if (!mounted) return;
       context.showSuccessSnackBar('Thank you for responding! Requester has been notified.');
       ref.invalidate(activeBloodRequestsProvider);
-      ref.invalidate(userBloodRequestsProvider);
     } catch (e) {
       if (!mounted) return;
       context.showErrorSnackBar(e.toString());

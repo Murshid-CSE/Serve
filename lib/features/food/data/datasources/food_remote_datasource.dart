@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:uuid/uuid.dart';
 import 'package:community_care_hub/features/food/domain/entities/food_donation_entity.dart';
 import 'package:community_care_hub/core/constants/firebase_constants.dart';
@@ -84,28 +85,36 @@ class FoodRemoteDataSource {
     }
   }
 
-  /// Query nearby food donations using Geohash prefix range
+  /// Query nearby food donations using multi-range geohash neighbor queries
   Stream<List<FoodDonationEntity>> getNearbyFoodDonations({
     required double latitude,
     required double longitude,
     required double radiusKm,
   }) {
     try {
-      final prefix = GeoUtils.getGeohashPrefix(latitude, longitude, radiusKm);
-      final range = GeoUtils.getGeohashRange(prefix);
+      final ranges = GeoUtils.getGeohashQueryRanges(latitude, longitude, radiusKm);
 
-      return _firestore
-          .collection(FirebaseConstants.foodDonationsCollection)
-          .where('status', isEqualTo: 'available')
-          .where('pickupLocation.geohash', isGreaterThanOrEqualTo: range[0])
-          .where('pickupLocation.geohash', isLessThanOrEqualTo: range[1])
-          .snapshots()
-          .map((snapshot) {
-        final list = snapshot.docs
-            .map((doc) => FoodDonationEntity.fromMap(doc.data()))
-            .toList();
+      // Create a Firestore snapshot stream for each geohash range
+      final streams = ranges.map((range) {
+        return _firestore
+            .collection(FirebaseConstants.foodDonationsCollection)
+            .where('status', isEqualTo: 'available')
+            .where('pickupLocation.geohash', isGreaterThanOrEqualTo: range[0])
+            .where('pickupLocation.geohash', isLessThanOrEqualTo: range[1])
+            .snapshots();
+      }).toList();
 
-        // Post-filter list by exact Haversine distance and expiry time
+      // Combine all streams, deduplicate by document ID, filter by distance
+      return CombineLatestStream.list(streams).map((snapshots) {
+        final allDocs = <String, FoodDonationEntity>{};
+        for (final snapshot in snapshots) {
+          for (final doc in snapshot.docs) {
+            allDocs[doc.id] = FoodDonationEntity.fromMap(doc.data());
+          }
+        }
+        final list = allDocs.values.toList();
+
+        // Post-filter by expiry and exact Haversine distance
         final activeList = list.where((item) => !item.isExpired).toList();
 
         final filtered = GeoUtils.filterByDistance<FoodDonationEntity>(

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:community_care_hub/features/emergency/domain/entities/emergency_alert_entity.dart';
 import 'package:community_care_hub/core/constants/firebase_constants.dart';
 import 'package:community_care_hub/core/utils/geo_utils.dart';
@@ -8,25 +9,31 @@ import 'package:community_care_hub/core/errors/app_exception.dart';
 class EmergencyRemoteDataSource {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Get nearby emergency alerts using geohash range queries (Stream)
+  /// Get nearby emergency alerts using multi-range geohash neighbor queries (Stream)
   Stream<List<EmergencyAlertEntity>> getNearbyEmergencyAlerts({
     required double latitude,
     required double longitude,
     required double radiusKm,
   }) {
     try {
-      final prefix = GeoUtils.getGeohashPrefix(latitude, longitude, radiusKm);
-      final range = GeoUtils.getGeohashRange(prefix);
+      final ranges = GeoUtils.getGeohashQueryRanges(latitude, longitude, radiusKm);
 
-      return _firestore
-          .collection(FirebaseConstants.emergencyRequestsCollection)
-          .where('location.geohash', isGreaterThanOrEqualTo: range[0])
-          .where('location.geohash', isLessThanOrEqualTo: range[1])
-          .snapshots()
-          .map((snapshot) {
-        final list = snapshot.docs
-            .map((doc) => EmergencyAlertEntity.fromMap(doc.data()))
-            .toList();
+      final streams = ranges.map((range) {
+        return _firestore
+            .collection(FirebaseConstants.emergencyRequestsCollection)
+            .where('location.geohash', isGreaterThanOrEqualTo: range[0])
+            .where('location.geohash', isLessThanOrEqualTo: range[1])
+            .snapshots();
+      }).toList();
+
+      return CombineLatestStream.list(streams).map((snapshots) {
+        final allDocs = <String, EmergencyAlertEntity>{};
+        for (final snapshot in snapshots) {
+          for (final doc in snapshot.docs) {
+            allDocs[doc.id] = EmergencyAlertEntity.fromMap(doc.data());
+          }
+        }
+        final list = allDocs.values.toList();
 
         final filtered = GeoUtils.filterByDistance<EmergencyAlertEntity>(
           items: list,
